@@ -1,0 +1,274 @@
+/* Admin Editor Styles */
+
+:root {
+    --primary: #4a5568;
+    --primary-dark: #2d3748;
+    --accent: #ed8936;
+    --accent-hover: #dd6b20;
+    --success: #48bb78;
+    --danger: #f56565;
+    --warning: #ecc94b;
+    --bg: #f7fafc;
+    --card-bg: #ffffff;
+    --border: #e2e8f0;
+    --text: #2d3748;
+    --text-muted: #718096;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+}
+
+.admin-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 1rem;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Header */
+.admin-header {
+    text-align: center;
+    padding: 1.5rem;
+    background: var(--card-bg);
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.admin-header h1 {
+    font-size: 1.75rem;
+    color: var(--primary-dark);
+}
+
+.subtitle {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+/* Tab Navigation */
+.tab-nav {
+    display: flex;
+    gap: 0.25rem;
+    background: var(--card-bg);
+    padding: 0.5rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    flex-wrap: wrap;
+}
+
+.tab-btn {
+    padding: 0.75rem 1.25rem;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    transition: all 0.2s;
+}
+
+.tab-btn:hover {
+    background: var(--bg);
+    color: var(--text);
+}
+
+.tab-btn.active {
+    background: var(--primary);
+    color: white;
+}
+
+/* Action Bar */
+.action-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    background: var(--card-bg);
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.status-indicator {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.dirty-indicator {
+    font-size: 0.85rem;
+    color: var(--warning);
+    font-weight: 500;
+    margin-left: 0.5rem;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* Buttons */
+.btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+/* Disabled state - use both :disabled and .btn-disabled for reliability */
+.btn:disabled,
+.btn.btn-disabled {
+    opacity: 0.5;
+    cursor: not-allowed !important;
+    pointer-events: none;
+    filter: grayscale(30%);
+}
+
+/* Explicitly prevent hover effects on disabled buttons */
+.btn:disabled:hover,
+.btn.btn-disabled:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+.btn-save {
+    background: var(--success);
+    color: white;
+}
+
+.btn-save:hover:not(:disabled):not(.btn-disabled) {
+    background: #38a169;
+    transform: translateY(-1px);
+}
+
+.btn-discard {
+    background: var(--text-muted);
+    color: white;
+}
+
+.btn-discard:hover:not(:disabled):not(.btn-disabled) {
+    background: var(--primary);
+    transform: translateY(-1px);
+}
+
+.btn-reset {
+    background: var(--danger);
+    color: white;
+}
+
+.btn-reset:hover:not(:disabled) {
+    background: #e53e3e;
+}
+
+.btn-cancel {
+    background: var(--border);
+    color: var(--text);
+}
+
+.btn-cancel:hover {
+    background: #cbd5e0;
+}
+
+.btn-confirm {
+    background: var(--danger);
+    color: white;
+}
+
+.btn-confirm:hover {
+    background: #e53e3e;
+}
+
+/* Editor Container */
+.editor-container {
+    flex: 1;
+    background: var(--card-bg);
+    border-radius: 8px;
+    padding: 1rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    overflow: auto;
+}
+
+.loading {
+    text-align: center;
+    color: var(--text-muted);
+    padding: 2rem;
+}
+
+/* Footer */
+.admin-footer {
+    text-align: center;
+    padding: 1rem;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    margin-top: 1rem;
+}
+
+.admin-footer a {
+    color: var(--accent);
+    text-decoration: none;
+}
+
+.admin-footer a:hover {
+    text-decoration: underline;
+}
+
+/* Modal */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal {
+    background: var(--card-bg);
+    padding: 1.5rem;
+    border-radius: 8px;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.modal h3 {
+    margin-bottom: 0.75rem;
+    color: var(--primary-dark);
+}
+
+.modal p {
+    margin-bottom: 1rem;
+    color: var(--text-muted);
+}
+
+.modal-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+}
+

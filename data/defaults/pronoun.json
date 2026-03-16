@@ -1,0 +1,17 @@
+{
+  "couple_pronouns_by_guest": {
+    "bạn": ["chúng mình", "hai đứa", "bọn mình"],
+    "em": ["anh chị", "hai anh chị"],
+    "anh": ["chúng em", "bọn em", "hai đứa"],
+    "chị": ["chúng em", "bọn em", "hai đứa"],
+    "cậu": ["chúng mình", "hai đứa", "bọn mình"],
+    "mày": ["tụi mình", "bọn mình", "hai đứa"],
+    "ông": ["chúng cháu", "hai đứa", "bọn cháu"],
+    "bà": ["chúng cháu", "hai đứa", "bọn cháu"],
+    "cô": ["chúng cháu", "hai đứa", "bọn cháu"],
+    "chú": ["chúng cháu", "hai đứa", "bọn cháu"],
+    "dì": ["chúng cháu", "hai đứa", "bọn cháu"],
+    "bác": ["chúng cháu", "hai đứa", "bọn cháu"],
+    "con": ["chúng con", "hai đứa", "bọn con"]
+  }
+}

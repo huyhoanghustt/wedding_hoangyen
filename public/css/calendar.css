@@ -1,0 +1,140 @@
+/* ===========================
+   SECTION 5: CALENDAR
+   =========================== */
+#calendar-section {
+  background: var(--cream-light);
+  padding: 0.4rem 0.16rem;
+}
+
+.calendar-wrap {
+  background: white;
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  border: 1px solid rgba(97, 16, 16, 0.1);
+}
+
+.calendar-head {
+  background: var(--maroon);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.14rem 0.2rem;
+}
+
+.calendar-month-name {
+  font-family: var(--font-script);
+  font-size: 0.288rem;
+}
+
+.calendar-year-name {
+  font-size: 0.13rem;
+  color: rgba(255, 255, 255, 0.8);
+  letter-spacing: 1px;
+}
+
+.calendar-body {
+  padding: 0.16rem;
+}
+
+.calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  margin-bottom: 0.08rem;
+}
+
+.calendar-weekday-name {
+  text-align: center;
+  font-size: 0.1rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+  padding: 0.04rem 0;
+}
+
+.calendar-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.02rem;
+}
+
+.calendar-day {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.13rem;
+  color: var(--text-dark);
+  border-radius: 50%;
+  position: relative;
+  font-weight: 500;
+}
+
+.calendar-day.other-month {
+  color: #ccc;
+}
+
+.calendar-day.today {
+  background: var(--pink-light);
+  color: var(--maroon);
+  font-weight: 700;
+}
+
+.calendar-day.wedding-day {
+  position: relative;
+  color: transparent;
+  /* hide number, covered by heart image */
+}
+
+.calendar-day.calendar-day--secondary {
+  opacity: 0.55;
+}
+
+.calendar-day.calendar-day--secondary .heart-marker img {
+  animation-duration: 1.35s;
+}
+
+.calendar-day.calendar-day--secondary .day-num {
+  color: rgba(97, 16, 16, 0.92);
+}
+
+/* Heart calendar image marker */
+.calendar-day.wedding-day .heart-marker {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.calendar-day.wedding-day .heart-marker img {
+  width: 90%;
+  height: 90%;
+  object-fit: contain;
+  animation: heartPulse 1.2s ease-in-out infinite;
+}
+
+/* Day number shown on top of heart */
+.calendar-day.wedding-day .day-num {
+  position: absolute;
+  z-index: 1;
+  font-size: 0.12rem;
+  font-weight: 700;
+  color: var(--maroon);
+  text-shadow: 0 1px 0.03rem rgba(255, 255, 255, 0.8);
+}
+
+
+@keyframes heartPulse {
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.3);
+  }
+}
+

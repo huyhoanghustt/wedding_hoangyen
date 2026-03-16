@@ -1,0 +1,23 @@
+{
+  "name": "thiepcuoi4",
+  "version": "1.0.0",
+  "description": "Wedding Invitation Website Clone - Thiep Cuoi 47",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "admin:start": "node admin-server.js",
+    "admin:dev": "nodemon admin-server.js",
+    "test": "node tests/run_all_tests.js",
+    "invite:generate": "node scripts/generate-invite-link.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "qrcode": "^1.5.4",
+    "sharp": "^0.33.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}

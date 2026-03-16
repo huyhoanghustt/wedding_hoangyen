@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e8447a"/>
+      <stop offset="100%" stop-color="#be185d"/>
+    </linearGradient>
+  </defs>
+  <!-- Radar rings -->
+  <circle cx="32" cy="34" r="28" fill="none" stroke="#e8447a" stroke-width="1.2" opacity="0.2"/>
+  <circle cx="32" cy="34" r="20" fill="none" stroke="#e8447a" stroke-width="1.2" opacity="0.35"/>
+  <circle cx="32" cy="34" r="12" fill="none" stroke="#e8447a" stroke-width="1.2" opacity="0.5"/>
+  <!-- Radar sweep line -->
+  <line x1="32" y1="34" x2="32" y2="6" stroke="#e8447a" stroke-width="1.5" opacity="0.6"/>
+  <line x1="32" y1="34" x2="52" y2="14" stroke="url(#g)" stroke-width="2" opacity="0.8" stroke-linecap="round"/>
+  <!-- Heart shape at center, acting as radar "blip" -->
+  <path d="M32 44 C32 44, 18 32, 18 24 C18 18, 24 16, 28 18 C30 19.5, 31 21, 32 23 C33 21, 34 19.5, 36 18 C40 16, 46 18, 46 24 C46 32, 32 44, 32 44Z"
+        fill="url(#g)" stroke="#fff" stroke-width="0.5" opacity="0.95"/>
+  <!-- Small radar blip dots -->
+  <circle cx="22" cy="18" r="1.5" fill="#e8447a" opacity="0.6"/>
+  <circle cx="46" cy="40" r="1.5" fill="#e8447a" opacity="0.4"/>
+</svg>

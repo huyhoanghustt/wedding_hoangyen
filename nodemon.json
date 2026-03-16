@@ -1,0 +1,19 @@
+{
+  "ignore": [
+    "data/",
+    "uploads/",
+    "tmp/",
+    "tests/",
+    "public/",
+    "admin/",
+    "scripts/",
+    "docs/",
+    "node_modules/"
+  ],
+  "watch": [
+    "server.js",
+    "admin-server.js",
+    "admin-server/"
+  ],
+  "ext": "js"
+}

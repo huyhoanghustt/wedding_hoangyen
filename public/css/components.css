@@ -1,0 +1,794 @@
+/* ===========================
+   FLOATING HEARTS RAIN
+   =========================== */
+#hearts-canvas {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 5rem;
+  height: 100%;
+  pointer-events: none;
+  z-index: 9990;
+  overflow: hidden;
+}
+
+.heart-rain-item {
+  position: absolute;
+  pointer-events: none;
+  animation: heartFall linear infinite;
+  opacity: 0;
+  font-size: 0.14rem;
+  color: var(--heart-red);
+  user-select: none;
+}
+
+@keyframes heartFall {
+  0% {
+    transform: translateY(-0.2rem) rotate(0deg) scale(0);
+    opacity: 0;
+  }
+
+  10% {
+    opacity: 0.8;
+    transform: translateY(0) rotate(10deg) scale(1);
+  }
+
+  90% {
+    opacity: 0.6;
+  }
+
+  100% {
+    transform: translateY(110vh) rotate(360deg) scale(0.5);
+    opacity: 0;
+  }
+}
+
+/* ===========================
+   FLOATING TOOLBAR (bottom)
+   =========================== */
+#toolbar {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 5rem;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(0.1rem);
+  border-top: 1px solid rgba(97, 16, 16, 0.1);
+  display: flex;
+  align-items: center;
+  padding: 0.1rem 0.12rem;
+  gap: 0.08rem;
+  z-index: 9999;
+  box-shadow: 0 -0.04rem 0.2rem rgba(0, 0, 0, 0.08);
+  opacity: 1;
+  pointer-events: auto;
+  transition: transform 240ms ease, opacity 220ms ease;
+}
+
+#toolbar.is-hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-50%) translateY(calc(100% + 0.12rem));
+}
+
+#toolbar-toggle-btn {
+  position: fixed;
+  left: var(--toolbar-toggle-left, clamp(0.38rem, calc(50% + 2.2rem), calc(100% - 0.34rem)));
+  bottom: var(--toolbar-toggle-bottom-expanded, calc(var(--toolbar-height) + 0.44rem));
+  transform: translateX(-50%);
+  width: var(--toolbar-toggle-size, 0.44rem);
+  height: var(--toolbar-toggle-size, 0.44rem);
+  border: 1.5px solid rgba(97, 16, 16, 0.2);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.96);
+  color: var(--maroon);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 0.04rem 0.16rem rgba(61, 10, 10, 0.14);
+  z-index: 10010;
+  opacity: 1;
+  transition: bottom 360ms cubic-bezier(0.18, 0.88, 0.24, 1), transform 240ms ease, opacity 220ms ease, background-color 220ms ease, border-color 220ms ease;
+}
+
+#toolbar-toggle-btn:hover {
+  background: #fff;
+  border-color: rgba(97, 16, 16, 0.32);
+}
+
+#toolbar-toggle-btn:focus-visible {
+  outline: 2px solid rgba(97, 16, 16, 0.45);
+  outline-offset: 2px;
+}
+
+#toolbar-toggle-btn.is-collapsed {
+  bottom: var(--toolbar-toggle-bottom-collapsed, 0.12rem);
+}
+
+.toolbar-toggle-icon {
+  position: relative;
+  width: var(--toolbar-toggle-icon-size, 0.18rem);
+  height: var(--toolbar-toggle-icon-size, 0.18rem);
+  display: block;
+}
+
+.toolbar-toggle-icon .line {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--toolbar-toggle-line-width, 0.15rem);
+  height: var(--toolbar-toggle-line-height, 2px);
+  border-radius: 999px;
+  background: currentColor;
+  transform-origin: center;
+  transition: transform 240ms ease, opacity 220ms ease;
+}
+
+.toolbar-toggle-icon .line-1 {
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.toolbar-toggle-icon .line-2 {
+  opacity: 0;
+  transform: translate(-50%, -50%) scaleX(0.2);
+}
+
+.toolbar-toggle-icon .line-3 {
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+#toolbar-toggle-btn.is-collapsed .toolbar-toggle-icon .line-1 {
+  transform: translate(-50%, calc(-50% - 0.055rem)) rotate(0deg);
+}
+
+#toolbar-toggle-btn.is-collapsed .toolbar-toggle-icon .line-2 {
+  opacity: 1;
+  transform: translate(-50%, -50%) scaleX(1);
+}
+
+#toolbar-toggle-btn.is-collapsed .toolbar-toggle-icon .line-3 {
+  transform: translate(-50%, calc(-50% + 0.055rem)) rotate(0deg);
+}
+
+#blessing-input-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  background: #f5f0eb;
+  border-radius: 0.24rem;
+  padding: 0.08rem 0.14rem;
+  gap: 0.08rem;
+  border: 1.5px solid transparent;
+  transition: var(--transition);
+}
+
+#blessing-input-wrap:focus-within {
+  border-color: var(--maroon);
+  background: #fff;
+}
+
+#blessing-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: 0.13rem;
+  color: var(--text-dark);
+  outline: none;
+}
+
+#blessing-input::placeholder {
+  color: var(--text-muted);
+}
+
+#btn-send-blessing {
+  width: 0.36rem;
+  height: 0.36rem;
+  background: var(--maroon);
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: var(--transition);
+}
+
+#btn-send-blessing:hover {
+  background: var(--maroon-light);
+  transform: scale(1.05);
+}
+
+#btn-send-blessing svg {
+  width: 0.16rem;
+  height: 0.16rem;
+  fill: white;
+}
+
+#btn-shoot-hearts {
+  display: flex;
+  align-items: center;
+  gap: 0.05rem;
+  background: linear-gradient(135deg, #ff6b9d, #ff4757);
+  color: white;
+  border: none;
+  border-radius: 0.2rem;
+  padding: 0.08rem 0.14rem;
+  font-size: 0.12rem;
+  font-family: var(--font-body);
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: var(--transition);
+}
+
+#btn-shoot-hearts:hover {
+  transform: scale(1.05);
+}
+
+#btn-shoot-hearts:active {
+  transform: scale(0.95);
+}
+
+#btn-gift {
+  width: 0.36rem;
+  height: 0.36rem;
+  background: var(--cream);
+  border: 1.5px solid var(--maroon);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: var(--transition);
+  position: relative;
+  color: var(--maroon);
+}
+
+#btn-gift:hover {
+  background: var(--pink-light);
+}
+
+.heart-count-badge {
+  position: absolute;
+  top: -0.06rem;
+  right: -0.06rem;
+  background: var(--heart-red);
+  color: white;
+  font-size: 0.09rem;
+  font-weight: 700;
+  border-radius: 0.1rem;
+  padding: 1px 0.05rem;
+  min-width: 0.16rem;
+  text-align: center;
+  line-height: 0.14rem;
+}
+
+/* ===========================
+   FLOATING BLESSING MESSAGES
+   =========================== */
+#blessing-messages {
+  position: fixed;
+  left: max(0px, calc(50% - 2.5rem));
+  transform: none;
+  bottom: calc(var(--toolbar-height) + 0.16rem);
+  width: 100%;
+  max-width: 5rem;
+  pointer-events: none;
+  padding: 0 0.12rem;
+  z-index: 9980;
+  height: 2.34rem;
+  overflow: hidden;
+  isolation: isolate;
+  opacity: 1;
+  transition: transform 240ms ease, opacity 220ms ease;
+}
+
+#blessing-messages.is-hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(0.12rem);
+}
+
+.blessing-msg {
+  --bless-origin-x: 50%;
+  --bless-x-mid: 0rem;
+  --bless-x-offset: 0rem;
+  --bless-y-lift: 1.48rem;
+  --bless-start-rise: 0.05rem;
+  --bless-tilt: 0deg;
+  --bless-duration: 5600ms;
+  --bless-delay: 0ms;
+  --bless-alpha: 0.92;
+  position: absolute;
+  left: var(--bless-origin-x);
+  right: auto;
+  bottom: 0.02rem;
+  width: max-content;
+  max-width: min(86%, 3.72rem);
+  padding: 0.075rem 0.14rem;
+  border-radius: 0.18rem;
+  border: 1px solid rgba(97, 16, 16, 0.11);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(255, 255, 255, 0.86));
+  opacity: 0;
+  backdrop-filter: blur(0.12rem);
+  box-shadow:
+    0 0.02rem 0.06rem rgba(61, 10, 10, 0.06),
+    0 0.06rem 0.18rem rgba(61, 10, 10, 0.12);
+  font-size: 0.13rem;
+  line-height: 1.35;
+  color: var(--text-dark);
+  white-space: normal;
+  pointer-events: none;
+  will-change: transform, opacity;
+  animation: blessingBubbleFloat var(--bless-duration) cubic-bezier(0.18, 0.8, 0.22, 1) var(--bless-delay) forwards;
+}
+
+.blessing-msg::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -0.22rem;
+  width: 0.46rem;
+  height: 0.28rem;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: radial-gradient(ellipse at center,
+      rgba(97, 16, 16, 0.11) 0%,
+      rgba(97, 16, 16, 0.05) 35%,
+      rgba(97, 16, 16, 0) 72%);
+  opacity: 0;
+  pointer-events: none;
+  animation: blessingBubbleTail var(--bless-duration) linear var(--bless-delay) forwards;
+}
+
+.blessing-msg strong {
+  color: var(--maroon);
+  font-weight: 700;
+}
+
+@keyframes blessingBubbleFloat {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, calc(var(--bless-start-rise) + 0.14rem), 0) scale(0.95) rotate(calc(var(--bless-tilt) * 0.35));
+  }
+
+  10% {
+    opacity: 1;
+    transform: translate3d(calc(var(--bless-x-mid) * 0.25), calc(var(--bless-start-rise) * -0.55), 0) scale(1) rotate(var(--bless-tilt));
+  }
+
+  38% {
+    opacity: 1;
+    transform: translate3d(var(--bless-x-mid), calc(var(--bless-y-lift) * -0.34), 0) scale(1.005) rotate(calc(var(--bless-tilt) * 0.72));
+  }
+
+  72% {
+    opacity: 0.9;
+    transform: translate3d(calc((var(--bless-x-mid) * 0.45) + (var(--bless-x-offset) * 0.55)), calc(var(--bless-y-lift) * -0.76), 0) scale(1.01) rotate(calc(var(--bless-tilt) * 0.45));
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--bless-x-offset), calc(var(--bless-y-lift) * -1), 0) scale(1.02) rotate(calc(var(--bless-tilt) * 0.2));
+  }
+}
+
+@keyframes blessingBubbleTail {
+  0% {
+    opacity: 0;
+  }
+
+  14% {
+    opacity: 0.24;
+  }
+
+  58% {
+    opacity: 0.14;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+.blessing-msg--reduced {
+  animation: blessingBubbleReduced 1100ms ease-out forwards;
+}
+
+@keyframes blessingBubbleReduced {
+  from {
+    opacity: 0;
+  }
+
+  30% {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+/* ===========================
+   MUSIC BUTTON
+   =========================== */
+#music-btn {
+  position: fixed;
+  top: 0.16rem;
+  right: max(0.05rem, calc((100vw - 5rem) / 2 + 0.05rem));
+  /* keep 0.23rem inset on narrow viewports; align to centered 5rem app container on wide viewports */
+  width: 0.44rem;
+  height: 0.44rem;
+  cursor: pointer;
+  z-index: 9998;
+  border-radius: 50%;
+  overflow: hidden;
+  transition: var(--transition);
+  background: var(--maroon);
+  /* background to make icon visible */
+  box-shadow: 0 0.02rem 0.12rem rgba(0, 0, 0, 0.3);
+}
+
+#music-btn img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+#music-btn.playing {
+  animation: spinDisc 4s linear infinite;
+}
+
+@keyframes spinDisc {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Disc rings */
+#music-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0.04rem;
+  border: 0.02rem solid rgba(255, 255, 255, 0.4);
+  border-radius: 50%;
+}
+
+#music-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0.11rem;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 50%;
+}
+
+/* ===========================
+   SECTION 9: FOOTER
+   =========================== */
+#footer {
+  background: var(--maroon);
+  padding: 0.32rem 0.2rem 0.128rem;
+  text-align: center;
+}
+
+.footer-script {
+  font-family: var(--font-script);
+  font-size: 0.32rem;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 0.08rem;
+}
+
+.footer-tagline {
+  font-size: 0.12rem;
+  color: rgba(255, 255, 255, 0.5);
+  letter-spacing: 0.02rem;
+  text-transform: uppercase;
+}
+
+.footer-share {
+  display: flex;
+  justify-content: center;
+  gap: 0.12rem;
+  margin-top: 0.2rem;
+}
+
+.footer-share-btn {
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  cursor: pointer;
+  transition: var(--transition);
+  border: none;
+}
+
+.footer-share-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.footer-share-btn svg {
+  width: 0.18rem;
+  height: 0.18rem;
+}
+
+/* ===========================
+   TOAST NOTIFICATION
+   =========================== */
+#toast {
+  position: fixed;
+  top: 0.2rem;
+  left: 50%;
+  transform: translateX(-50%) translateY(-3rem);
+  /* fully off-screen above */
+  background: rgba(30, 20, 20, 0.9);
+  color: white;
+  padding: 0.1rem 0.2rem;
+  border-radius: 0.24rem;
+  font-size: 0.13rem;
+  font-family: var(--font-body);
+  z-index: 99999;
+  transition: transform 0.3s ease;
+  backdrop-filter: blur(0.1rem);
+  white-space: nowrap;
+}
+
+#toast.show {
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ===========================
+   HEART BURST ANIMATION
+   =========================== */
+.heart-burst {
+  position: fixed;
+  pointer-events: none;
+  z-index: 99999;
+  animation: heartBurstFly 1.2s ease forwards;
+  font-size: 0.2rem;
+  color: var(--heart-red);
+}
+
+@keyframes heartBurstFly {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(0.5);
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(var(--tx), var(--ty)) scale(1.2);
+  }
+}
+
+/* ===========================
+   SCROLLBAR
+   =========================== */
+::-webkit-scrollbar {
+  width: 0.04rem;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(97, 16, 16, 0.3);
+  border-radius: 0.04rem;
+}
+
+/* ===========================
+   BLESSING NAME DIALOG
+   =========================== */
+.blessing-name-dialog-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.48);
+  z-index: 10000;
+  align-items: center;
+  justify-content: center;
+  padding: 0.16rem;
+}
+
+.blessing-name-dialog-overlay.open {
+  display: flex;
+  animation: blessingNameOverlayIn calc(0.25s * var(--animation-speed-factor, 1)) ease forwards;
+}
+
+@keyframes blessingNameOverlayIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.blessing-name-dialog-modal {
+  position: relative;
+  width: 100%;
+  max-width: 4rem;
+  background: #fff;
+  border-radius: 0.18rem;
+  padding: 0.22rem 0.2rem 0.2rem;
+  box-shadow: 0 0.12rem 0.48rem rgba(0, 0, 0, 0.22);
+  animation: blessingNameModalIn calc(0.28s * var(--animation-speed-factor, 1)) cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes blessingNameModalIn {
+  from {
+    opacity: 0;
+    transform: scale(0.88) translateY(0.16rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.blessing-name-dialog-close {
+  position: absolute;
+  top: 0.08rem;
+  right: 0.1rem;
+  border: none;
+  background: transparent;
+  color: #666;
+  font-size: 0.3rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  width: 0.4rem;
+  height: 0.4rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.blessing-name-dialog-close:hover {
+  color: #222;
+}
+
+.blessing-name-dialog-close:focus-visible {
+  outline: 2px solid rgba(97, 16, 16, 0.45);
+  outline-offset: 2px;
+  border-radius: 50%;
+}
+
+.blessing-name-dialog-title {
+  margin: 0;
+  text-align: center;
+  font-family: var(--font-script);
+  font-size: 0.28rem;
+  color: var(--primary);
+  line-height: 1.2;
+  padding: 0.04rem 0.28rem 0.08rem;
+}
+
+.blessing-name-dialog-body {
+  padding: 0.08rem 0.02rem 0.16rem;
+}
+
+.blessing-name-dialog-option {
+  display: flex;
+  margin-bottom: 0.12rem;
+}
+
+.blessing-name-dialog-option:last-child {
+  margin-bottom: 0;
+}
+
+.blessing-name-dialog-option label {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.08rem;
+  cursor: pointer;
+}
+
+.blessing-name-dialog-option input[type="radio"] {
+  margin: 0;
+  accent-color: var(--maroon);
+  width: 0.16rem;
+  height: 0.16rem;
+  flex-shrink: 0;
+}
+
+.blessing-name-input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  border-bottom: 1.5px solid rgba(97, 16, 16, 0.26);
+  background: transparent;
+  color: var(--text-dark);
+  font-family: var(--font-body);
+  font-size: 0.13rem;
+  line-height: 1.5;
+  padding: 0.04rem 0;
+  outline: none;
+  transition: border-color 180ms ease;
+}
+
+.blessing-name-input:focus {
+  border-bottom-color: var(--maroon);
+}
+
+.blessing-name-anonymous-text {
+  font-size: 0.115rem;
+  color: var(--text-muted);
+  font-style: italic;
+  line-height: 1.55;
+}
+
+.blessing-name-submit-btn {
+  display: block;
+  margin: 0 auto;
+  min-width: 1.5rem;
+  padding: 0.09rem 0.24rem;
+  border: none;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #ff6b9d, #ff4757);
+  color: #fff;
+  font-family: var(--font-body);
+  font-size: 0.13rem;
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: transform 180ms ease, filter 180ms ease;
+}
+
+.blessing-name-submit-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.03);
+}
+
+.blessing-name-submit-btn:active {
+  transform: translateY(0);
+  filter: brightness(0.98);
+}
+
+.blessing-name-submit-btn:focus-visible {
+  outline: 2px solid rgba(97, 16, 16, 0.45);
+  outline-offset: 2px;
+}
+
+@media (max-width: 480px) {
+  .blessing-name-dialog-overlay {
+    padding: 0.12rem;
+  }
+
+  .blessing-name-dialog-modal {
+    width: 90%;
+    max-width: 90%;
+    padding: 0.2rem 0.16rem 0.18rem;
+  }
+
+  .blessing-name-dialog-title {
+    font-size: 0.24rem;
+  }
+}
+
+

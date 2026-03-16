@@ -1,0 +1,75 @@
+/* ===========================
+   WEDDING INVITATION - THIEP CUOI 47
+   Mobile-first design
+   =========================== */
+
+/* --- Google Fonts --- */
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Infant:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Dancing+Script:wght@400;500;600;700&family=Great+Vibes&family=Josefin+Sans:wght@300;400;500;600&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Montserrat:wght@300;400;500;600;700&family=Pacifico&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Quicksand:wght@300;400;500;600;700&family=Raleway:wght@300;400;500;600;700&family=Sacramento&family=Tangerine:wght@400;700&display=swap');
+
+/* --- Custom Fonts --- */
+@font-face {
+  font-family: 'Hoatay1';
+  src: url('/assets/fonts/hoatay1.woff2') format('woff2'),
+    url('/assets/fonts/hoatay1.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* --- Variables --- */
+:root {
+  --maroon: #611010;
+  --maroon-light: #8b1a1a;
+  --maroon-dark: #3d0a0a;
+  --cream: #fdf6ef;
+  --cream-light: #fffaf5;
+  --gold: #c9a84c;
+  --text-dark: #2c1a1a;
+  --text-muted: #8a6a6a;
+  --white: #ffffff;
+  --pink-light: #fce8e8;
+  --heart-red: #e63946;
+  --shadow: 0 0.04rem 0.2rem rgba(97, 16, 16, 0.12);
+  --shadow-sm: 0 0.02rem 0.08rem rgba(0, 0, 0, 0.08);
+  --radius: 0.16rem;
+  --radius-sm: 0.08rem;
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --font-script: 'Great Vibes', 'Hoatay1', cursive;
+  --font-body: 'Quicksand', 'Cormorant Infant', sans-serif;
+  --toolbar-height: 0.56rem;
+  --toolbar-safe-space: calc(var(--toolbar-height) + 2rem);
+  --toolbar-toggle-left: clamp(0.38rem, calc(50% + 2.2rem), calc(100% - 0.34rem));
+  --toolbar-toggle-bottom-expanded: calc(var(--toolbar-height) + 0.44rem);
+  --toolbar-toggle-bottom-collapsed: 0.12rem;
+  --toolbar-toggle-size: 0.44rem;
+  --toolbar-toggle-icon-size: 0.18rem;
+  --toolbar-toggle-line-width: 0.15rem;
+  --toolbar-toggle-line-height: 2px;
+  --animation-speed-factor: 1;
+}
+
+/* --- Reset --- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background: #e8ddd5;
+  font-family: var(--font-body);
+  color: var(--text-dark);
+  min-height: 100vh;
+  overflow-x: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+

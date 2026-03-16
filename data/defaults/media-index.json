@@ -1,0 +1,90 @@
+{
+  "photos": [
+    {
+      "id": "36c0ab47778ffaeb6b37593a60bbb399",
+      "originalName": "BOP_2268.JPG",
+      "filename": "36c0ab47778ffaeb6b37593a60bbb399.jpg",
+      "uploadedAt": "2026-02-26T15:18:01.374Z",
+      "size": 626545
+    },
+    {
+      "id": "380c6b6b0cd16572f47dffcfd4ed7f0f",
+      "originalName": "BOP_2393.JPG",
+      "filename": "380c6b6b0cd16572f47dffcfd4ed7f0f.jpg",
+      "uploadedAt": "2026-02-26T15:18:01.375Z",
+      "size": 338849
+    },
+    {
+      "id": "7f046383f90f54b330935599f581cfcf",
+      "originalName": "BOP_2519.JPG",
+      "filename": "7f046383f90f54b330935599f581cfcf.jpg",
+      "uploadedAt": "2026-02-26T15:18:01.376Z",
+      "size": 1338378
+    },
+    {
+      "id": "305c149e9e117e85d3357480343db8b0",
+      "originalName": "BOP_2693.JPG",
+      "filename": "305c149e9e117e85d3357480343db8b0.jpg",
+      "uploadedAt": "2026-02-26T15:18:01.378Z",
+      "size": 1601778
+    },
+    {
+      "id": "a6643990723a6ced23d5e325b3888598",
+      "originalName": "BOP_2759.JPG",
+      "filename": "a6643990723a6ced23d5e325b3888598.jpg",
+      "uploadedAt": "2026-02-26T15:18:01.379Z",
+      "size": 1134537
+    },
+    {
+      "id": "a25faeee459b898741939c567ff7d15b",
+      "originalName": "BOP_2914.JPG",
+      "filename": "a25faeee459b898741939c567ff7d15b.jpg",
+      "uploadedAt": "2026-02-26T15:18:01.380Z",
+      "size": 780057
+    },
+    {
+      "id": "6d81eb6cc3f8725a1be7c67ffa4c5b75",
+      "originalName": "BOP_3129.JPG",
+      "filename": "6d81eb6cc3f8725a1be7c67ffa4c5b75.jpg",
+      "uploadedAt": "2026-02-26T15:18:01.380Z",
+      "size": 379550
+    },
+    {
+      "id": "ec73393ed3499fccac6568ee00d04f81",
+      "originalName": "BOP_3699.JPG",
+      "filename": "ec73393ed3499fccac6568ee00d04f81.jpg",
+      "uploadedAt": "2026-02-26T15:18:01.381Z",
+      "size": 433938
+    },
+    {
+      "id": "8bdbafb2d236a67a0f03db3b447f665d",
+      "originalName": "stk_chure.jpeg",
+      "filename": "8bdbafb2d236a67a0f03db3b447f665d.jpeg",
+      "uploadedAt": "2026-02-26T15:18:01.381Z",
+      "size": 93200
+    },
+    {
+      "id": "a6883902816ab619d4837306cea246fe",
+      "originalName": "stk_codau.jpeg",
+      "filename": "a6883902816ab619d4837306cea246fe.jpeg",
+      "uploadedAt": "2026-02-26T15:18:01.381Z",
+      "size": 80880
+    },
+    {
+      "id": "d7b24d52f2c99bba3be55f76caba092b",
+      "originalName": "a37d1bf5-51e9-4ea1-99e4-d31aae4e9be7.png",
+      "filename": "d7b24d52f2c99bba3be55f76caba092b.png",
+      "uploadedAt": "2026-02-26T15:18:01.387Z",
+      "size": 426287
+    }
+  ],
+  "music": [
+    {
+      "id": "de96acfbb40bc8e79f91062dbed7050c",
+      "originalName": "background.mp3",
+      "filename": "de96acfbb40bc8e79f91062dbed7050c.mp3",
+      "uploadedAt": "2026-02-26T15:18:01.387Z",
+      "size": 5310308
+    }
+  ]
+}

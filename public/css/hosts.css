@@ -1,0 +1,67 @@
+/* ===========================
+   HOSTS SECTION (below hero)
+   =========================== */
+#hosts {
+  background: white;
+  padding: 0.2rem 0.16rem;
+  border-bottom: 1px solid rgba(97, 16, 16, 0.08);
+}
+
+.hosts-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  gap: 0.08rem;
+}
+
+.host-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.08rem;
+  flex: 1;
+}
+
+.host-icon {
+  flex-shrink: 0;
+  width: 0.32rem;
+  height: 0.32rem;
+  background: var(--pink-light);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--maroon);
+}
+
+.host-icon svg {
+  width: 0.16rem;
+  height: 0.16rem;
+}
+
+.host-info {
+  flex: 1;
+}
+
+.host-role {
+  font-size: 0.1rem;
+  font-weight: 700;
+  color: var(--maroon);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 0.02rem;
+}
+
+.host-name {
+  font-size: 0.12rem;
+  color: var(--text-dark);
+  line-height: 1.5;
+}
+
+.hosts-heart {
+  font-size: 0.2rem;
+  color: var(--maroon);
+  flex-shrink: 0;
+  animation: heartPulse 1.5s ease-in-out infinite;
+}
+
+

@@ -1,0 +1,363 @@
+{
+  "version": 1,
+  "story_layout": {
+    "title": "Chuyện Tình",
+    "grid": {
+      "columns": 12,
+      "row_unit_mode": "square_from_column",
+      "gap": "0.06rem",
+      "min_height": "3.2rem",
+      "max_width": "4.6rem"
+    },
+    "animation": {
+      "duration_ms": 4200,
+      "easing": "cubic-bezier(0.22, 1, 0.36, 1)",
+      "stagger_ms": 80
+    },
+    "blocks": [
+      {
+        "id": "photo-hero-left",
+        "col_span": 8,
+        "row_span": 11,
+        "col_start": 1,
+        "row_start": 1,
+        "item": {
+          "type": "image",
+          "src": "/media/photos/01f9107fa9f0f9965357d20ee9e2c3b4.jpg",
+          "alt": "Ảnh cưới lãng mạn",
+          "frame": "square"
+        },
+        "effect": {
+          "fade_in": true,
+          "slide_from": "left",
+          "slide_distance": "0.28rem"
+        }
+      },
+      {
+        "id": "photo-hero-right",
+        "col_span": 6,
+        "row_span": 7,
+        "col_start": 7,
+        "row_start": 5,
+        "item": {
+          "type": "image",
+          "src": "/media/photos/0d7a177ec8f990376027fbfc9806dc8e.jpg",
+          "alt": "Khoảnh khắc hạnh phúc",
+          "frame": "rounded-rect",
+          "border_radius": "0.12rem"
+        },
+        "effect": {
+          "fade_in": true,
+          "slide_from": "right",
+          "slide_distance": "0.28rem"
+        }
+      },
+      {
+        "id": "couple-names",
+        "col_span": 10,
+        "row_span": 4,
+        "col_start": 2,
+        "row_start": 13,
+        "item": {
+          "type": "text",
+          "text": "Tiến\n&\nQuyên",
+          "font_family": "var(--font-script)",
+          "font_size": "0.32rem",
+          "line_height": "1.1",
+          "color": "var(--maroon)",
+          "text_align": "center"
+        },
+        "effect": {
+          "fade_in": true,
+          "slide_from": "up",
+          "slide_distance": "0.18rem"
+        }
+      },
+      {
+        "id": "love-label",
+        "col_span": 4,
+        "row_span": 2,
+        "col_start": 1,
+        "row_start": 16,
+        "item": {
+          "type": "text",
+          "text": "❤ Love ❤",
+          "font_family": "var(--font-script)",
+          "font_size": "0.20rem",
+          "color": "var(--maroon)",
+          "rotate": "-15deg",
+          "text_align": "center",
+          "opacity": "0.55"
+        },
+        "effect": {
+          "fade_in": true,
+          "slide_from": "left",
+          "slide_distance": "0.2rem"
+        }
+      },
+      {
+        "id": "poem-1",
+        "col_span": 10,
+        "row_span": 8,
+        "col_start": 2,
+        "row_start": 17,
+        "item": {
+          "type": "text",
+          "text": "Đôi ta như thể hai cây\nKhác nhau gốc rễ, chung trời yêu thương.\nTừ nay sánh bước dặm trường\nCùng nhau viết tiếp câu chuyện tình đời.\n—\nNgày xưa em đến bên đời\nNhư cơn gió nhẹ giữa trời thu sang.\nĐể anh mơ giấc mơ vàng\nĐể tim thổn thức, để ngàn yêu thương.",
+          "font_family": "var(--font-script)",
+          "font_size": "0.165rem",
+          "line_height": "1.6",
+          "color": "var(--text-dark)",
+          "opacity": "0.92",
+          "text_align": "center"
+        },
+        "effect": {
+          "fade_in": true,
+          "slide_from": "up",
+          "slide_distance": "0.22rem"
+        }
+      },
+      {
+        "id": "photo-circle",
+        "col_span": 6,
+        "row_span": 7,
+        "col_start": 1,
+        "row_start": 26,
+        "item": {
+          "type": "image",
+          "src": "/media/photos/52aea85d411ee5df73b043d940ba91e4.jpg",
+          "alt": "Nụ cười hạnh phúc",
+          "frame": "circle"
+        },
+        "effect": {
+          "fade_in": true,
+          "slide_from": "left",
+          "slide_distance": "0.26rem"
+        }
+      },
+      {
+        "id": "photo-tall-right",
+        "col_span": 6,
+        "row_span": 11,
+        "col_start": 7,
+        "row_start": 26,
+        "item": {
+          "type": "image",
+          "src": "/media/photos/5b628bbd26d04e0ecc411c401a09cdac.jpg",
+          "alt": "Bên nhau suốt đời",
+          "frame": "oval"
+        },
+        "effect": {
+          "fade_in": true,
+          "slide_from": "right",
+          "slide_distance": "0.26rem"
+        }
+      },
+      {
+        "id": "quote-whisper",
+        "col_span": 7,
+        "row_span": 5,
+        "col_start": 1,
+        "row_start": 34,
+        "item": {
+          "type": "text",
+          "text": "Yêu là khi con tim\nnhẹ nhàng gọi tên nhau\ngiữa muôn vàn tiếng nói...",
+          "font_family": "'Playfair Display', serif",
+          "font_size": "0.14rem",
+          "line_height": "1.65",
+          "font_weight": "400",
+          "color": "var(--text-muted)",
+          "text_align": "left",
+          "opacity": "0.85"
+        },
+        "effect": {
+          "fade_in": true,
+          "slide_from": "left",
+          "slide_distance": "0.18rem"
+        }
+      },
+      {
+        "id": "poem-2",
+        "col_span": 10,
+        "row_span": 7,
+        "col_start": 2,
+        "row_start": 39,
+        "item": {
+          "type": "text",
+          "text": "Trăm năm hạnh phúc bên nhau\nNgày vui se mối duyên sâu tình nồng.\nTừ nay chung bước song song\nCùng nhau xây đắp ước mong cuộc đời.\n—\nEm ơi mùa cưới đã về\nBiết bao thương nhớ tràn trề trong tim.",
+          "font_family": "'Sacramento', cursive",
+          "font_size": "0.18rem",
+          "line_height": "1.55",
+          "color": "var(--maroon)",
+          "opacity": "0.88",
+          "text_align": "center"
+        },
+        "effect": {
+          "fade_in": true,
+          "slide_from": "up",
+          "slide_distance": "0.22rem"
+        }
+      },
+      {
+        "id": "photo-ellipse-center",
+        "col_span": 10,
+        "row_span": 12,
+        "col_start": 2,
+        "row_start": 47,
+        "item": {
+          "type": "image",
+          "src": "/media/photos/4fad81998fdd5f860e7acfbe31deced1.jpg",
+          "alt": "Tình yêu vĩnh cửu",
+          "frame": "ellipse"
+        },
+        "effect": {
+          "fade_in": true,
+          "slide_from": "up",
+          "slide_distance": "0.24rem"
+        }
+      },
+      {
+        "id": "divider-ornament",
+        "col_span": 8,
+        "row_span": 2,
+        "col_start": 3,
+        "row_start": 60,
+        "item": {
+          "type": "text",
+          "text": "· · · ♥ · · ·",
+          "font_family": "var(--font-script)",
+          "font_size": "0.18rem",
+          "color": "var(--maroon)",
+          "opacity": "0.45",
+          "text_align": "center"
+        },
+        "effect": {
+          "fade_in": true,
+          "slide_from": "up",
+          "slide_distance": "0.1rem"
+        }
+      },
+      {
+        "id": "photo-final-left",
+        "col_span": 6,
+        "row_span": 9,
+        "col_start": 1,
+        "row_start": 63,
+        "item": {
+          "type": "image",
+          "src": "/media/photos/df2603ebfe0ca45daf2c5e530af312c9.jpg",
+          "alt": "Ngày trọng đại",
+          "frame": "rounded-rect",
+          "border_radius": "0.16rem"
+        },
+        "effect": {
+          "fade_in": true,
+          "slide_from": "left",
+          "slide_distance": "0.26rem"
+        }
+      },
+      {
+        "id": "photo-final-right",
+        "col_span": 6,
+        "row_span": 9,
+        "col_start": 7,
+        "row_start": 65,
+        "item": {
+          "type": "image",
+          "src": "/media/photos/c257398e95f7d5e6a666593f0f96ff8d.jpg",
+          "alt": "Hạnh phúc viên mãn",
+          "frame": "square"
+        },
+        "effect": {
+          "fade_in": true,
+          "slide_from": "right",
+          "slide_distance": "0.26rem"
+        }
+      },
+      {
+        "id": "love-label-2",
+        "col_span": 4,
+        "row_span": 2,
+        "col_start": 9,
+        "row_start": 63,
+        "item": {
+          "type": "text",
+          "text": "Forever ♥",
+          "font_family": "'Dancing Script', cursive",
+          "font_size": "0.16rem",
+          "color": "var(--maroon)",
+          "rotate": "12deg",
+          "text_align": "center",
+          "opacity": "0.5"
+        },
+        "effect": {
+          "fade_in": true,
+          "slide_from": "right",
+          "slide_distance": "0.16rem"
+        }
+      },
+      {
+        "id": "poem-closing",
+        "col_span": 10,
+        "row_span": 6,
+        "col_start": 2,
+        "row_start": 75,
+        "item": {
+          "type": "text",
+          "text": "Gặp được em, con tim bối rối\nCâu thương nàng biết nói sao đây.\nTrên trời có triệu đám mây\nDưới đất có kẻ đắm say vì nàng.\n—\nYêu em từ thuở ban đầu\nĐến khi tóc bạc, bên nhau trọn đời.",
+          "font_family": "var(--font-script)",
+          "font_size": "0.165rem",
+          "line_height": "1.6",
+          "color": "var(--text-dark)",
+          "opacity": "0.9",
+          "text_align": "center"
+        },
+        "effect": {
+          "fade_in": true,
+          "slide_from": "up",
+          "slide_distance": "0.22rem"
+        }
+      },
+      {
+        "id": "photo-bottom-wide",
+        "col_span": 12,
+        "row_span": 10,
+        "col_start": 1,
+        "row_start": 82,
+        "item": {
+          "type": "image",
+          "src": "/media/photos/e9d5d94de81102973f80c38674edf031.jpg",
+          "alt": "Cùng nhau bước tới tương lai",
+          "frame": "rounded-rect",
+          "border_radius": "0.08rem"
+        },
+        "effect": {
+          "fade_in": true,
+          "slide_from": "up",
+          "slide_distance": "0.3rem"
+        }
+      },
+      {
+        "id": "closing-text",
+        "col_span": 10,
+        "row_span": 4,
+        "col_start": 2,
+        "row_start": 93,
+        "item": {
+          "type": "text",
+          "text": "Tiến ♥ Quyên\nHạnh Phúc Trọn Đời",
+          "font_family": "var(--font-script)",
+          "font_size": "0.26rem",
+          "line_height": "1.3",
+          "color": "var(--maroon)",
+          "text_align": "center"
+        },
+        "effect": {
+          "fade_in": true,
+          "slide_from": "up",
+          "slide_distance": "0.16rem"
+        }
+      }
+    ]
+  }
+}

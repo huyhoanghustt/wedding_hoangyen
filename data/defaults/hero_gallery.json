@@ -1,0 +1,56 @@
+{
+  "_comment": "=== HERO & GALLERY CONFIGURATION ===",
+  "hero": {
+    "photo": "/media/photos/a25faeee459b898741939c567ff7d15b.jpg",
+    "photo_width": "100%",
+    "invite_label": "Thư mời tiệc cưới",
+    "event_name": "Lễ Thành Hôn",
+    "name_overlay_pos": {
+      "top": "0.65rem",
+      "right": "0.16rem"
+    },
+    "bottom_overlay_pos": {
+      "bottom": "0.04rem",
+      "right": "0.16rem"
+    }
+  },
+  "gallery": {
+    "photos": [
+      {
+        "src": "/media/photos/36c0ab47778ffaeb6b37593a60bbb399.jpg",
+        "alt": "Ảnh cưới 1"
+      },
+      {
+        "src": "/media/photos/380c6b6b0cd16572f47dffcfd4ed7f0f.jpg",
+        "alt": "Ảnh cưới 2"
+      },
+      {
+        "src": "/media/photos/7f046383f90f54b330935599f581cfcf.jpg",
+        "alt": "Ảnh cưới 3"
+      },
+      {
+        "src": "/media/photos/305c149e9e117e85d3357480343db8b0.jpg",
+        "alt": "Ảnh cưới 4"
+      },
+      {
+        "src": "/media/photos/a6643990723a6ced23d5e325b3888598.jpg",
+        "alt": "Ảnh cưới 5"
+      },
+      {
+        "src": "/media/photos/6d81eb6cc3f8725a1be7c67ffa4c5b75.jpg",
+        "alt": "Ảnh cưới 6"
+      },
+      {
+        "src": "/media/photos/ec73393ed3499fccac6568ee00d04f81.jpg",
+        "alt": "Ảnh cưới 7"
+      }
+    ],
+    "sizes": {
+      "_note": "Đơn vị rem. 1rem = 100px ở màn 500px",
+      "main_img_width": "100%",
+      "thumb_size": "0.8rem",
+      "nav_btn_size": "0.4rem",
+      "nav_icon_size": "0.2rem"
+    }
+  }
+}

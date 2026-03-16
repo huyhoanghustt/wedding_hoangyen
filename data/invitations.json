@@ -1,0 +1,439 @@
+{
+  "_comment": "=== INVITATION FORMATS === Defines invitation body templates with placeholder slots.",
+  "active_format": "default",
+  "formats": {
+    "default": {
+      "label": "Mặc định",
+      "title": "Kính gửi quý vị",
+      "body": "Thiệp hồng xin được gửi đến quý vị như một lời mời chân thành.\nRất mong quý vị sẽ đến chung vui và chứng kiến khoảnh khắc hạnh phúc của Huy Hoàng và Hải Yến.\nSự hiện diện của quý vị sẽ làm ngày vui thêm ý nghĩa và trọn vẹn. 💍",
+      "closing": "· · · ♥ · · ·",
+      "default_pronouns": [
+        "bạn",
+        "Bạn",
+        "bạn",
+        "bọn mình",
+        "bạn",
+        "gia đình",
+        "hai đứa",
+        "bạn",
+        "chúng mình",
+        "bạn"
+      ],
+      "slot_descriptors": [
+        {
+          "index": 0,
+          "label": "{d0}",
+          "placeholder": "{d0}",
+          "type": "guest",
+          "hint": "guest pronoun"
+        },
+        {
+          "index": 1,
+          "label": "{d1}",
+          "placeholder": "{d1}",
+          "type": "guest",
+          "hint": "Guest (cap)"
+        },
+        {
+          "index": 2,
+          "label": "{d2}",
+          "placeholder": "{d2}",
+          "type": "guest",
+          "hint": "guest pronoun"
+        },
+        {
+          "index": 3,
+          "label": "{d3}",
+          "placeholder": "{d3}",
+          "type": "couple",
+          "hint": "couple pronoun"
+        },
+        {
+          "index": 4,
+          "label": "{d4}",
+          "placeholder": "{d4}",
+          "type": "guest",
+          "hint": "guest pronoun"
+        },
+        {
+          "index": 5,
+          "label": "{d5}",
+          "placeholder": "{d5}",
+          "type": "family-companion",
+          "hint": "companion after 'và'"
+        },
+        {
+          "index": 6,
+          "label": "{d6}",
+          "placeholder": "{d6}",
+          "type": "couple",
+          "hint": "couple pronoun"
+        },
+        {
+          "index": 7,
+          "label": "{d7}",
+          "placeholder": "{d7}",
+          "type": "guest",
+          "hint": "guest pronoun"
+        },
+        {
+          "index": 8,
+          "label": "{d8}",
+          "placeholder": "{d8}",
+          "type": "couple",
+          "hint": "couple pronoun"
+        },
+        {
+          "index": 9,
+          "label": "{d9}",
+          "placeholder": "{d9}",
+          "type": "guest",
+          "hint": "guest pronoun"
+        }
+      ]
+    },
+    "formal": {
+      "label": "Trang trọng",
+      "title": "Trân trọng kính mời",
+      "body": "Trân trọng kính mời {d0} đến dự lễ thành hôn của {d3}.\n{d1} là người đã luôn quan tâm và dõi theo {d3} trong suốt thời gian qua.\nSự hiện diện của {d2} sẽ là niềm vinh hạnh lớn cho {d6}.\nMong {d4}{d5} sẽ cùng chia vui.\n{d8} trân trọng cảm ơn.",
+      "closing": "· · · ♥ · · ·",
+      "default_pronouns": [
+        "bạn",
+        "Bạn",
+        "bạn",
+        "chúng tôi",
+        "bạn",
+        "gia đình",
+        "hai chúng tôi",
+        "bạn",
+        "Chúng tôi"
+      ],
+      "slot_descriptors": [
+        {
+          "index": 0,
+          "label": "{d0}",
+          "placeholder": "{d0}",
+          "type": "guest",
+          "hint": "guest pronoun"
+        },
+        {
+          "index": 1,
+          "label": "{d1}",
+          "placeholder": "{d1}",
+          "type": "guest",
+          "hint": "Guest (cap)"
+        },
+        {
+          "index": 2,
+          "label": "{d2}",
+          "placeholder": "{d2}",
+          "type": "guest",
+          "hint": "guest pronoun"
+        },
+        {
+          "index": 3,
+          "label": "{d3}",
+          "placeholder": "{d3}",
+          "type": "couple",
+          "hint": "couple pronoun"
+        },
+        {
+          "index": 4,
+          "label": "{d4}",
+          "placeholder": "{d4}",
+          "type": "guest",
+          "hint": "guest pronoun"
+        },
+        {
+          "index": 5,
+          "label": "{d5}",
+          "placeholder": "{d5}",
+          "type": "family-companion",
+          "hint": "companion after 'và'"
+        },
+        {
+          "index": 6,
+          "label": "{d6}",
+          "placeholder": "{d6}",
+          "type": "couple",
+          "hint": "couple pronoun"
+        },
+        {
+          "index": 7,
+          "label": "{d7}",
+          "placeholder": "{d7}",
+          "type": "guest",
+          "hint": "guest pronoun"
+        },
+        {
+          "index": 8,
+          "label": "{d8}",
+          "placeholder": "{d8}",
+          "type": "couple",
+          "hint": "couple pronoun"
+        }
+      ]
+    },
+    "casual": {
+      "label": "Thân mật",
+      "title": "Thân mời",
+      "body": "Gửi {d0} một tấm thiệp nhỏ.\n{d1} là bạn thân của {d3} nên không thể thiếu trong ngày vui này.\n{d2} nhớ đến chung vui với {d6} nha!\nCảm ơn {d4}{d5} rất nhiều.\nYêu thương!",
+      "closing": "♥ ♥ ♥",
+      "default_pronouns": [
+        "bạn",
+        "Bạn",
+        "bạn",
+        "bọn mình",
+        "bạn",
+        "và người thương",
+        "hai đứa",
+        "bạn",
+        "chúng mình"
+      ],
+      "slot_descriptors": [
+        {
+          "index": 0,
+          "label": "{d0}",
+          "placeholder": "{d0}",
+          "type": "guest",
+          "hint": "guest pronoun"
+        },
+        {
+          "index": 1,
+          "label": "{d1}",
+          "placeholder": "{d1}",
+          "type": "guest",
+          "hint": "Guest (cap)"
+        },
+        {
+          "index": 2,
+          "label": "{d2}",
+          "placeholder": "{d2}",
+          "type": "guest",
+          "hint": "guest pronoun"
+        },
+        {
+          "index": 3,
+          "label": "{d3}",
+          "placeholder": "{d3}",
+          "type": "couple",
+          "hint": "couple pronoun"
+        },
+        {
+          "index": 4,
+          "label": "{d4}",
+          "placeholder": "{d4}",
+          "type": "guest",
+          "hint": "guest pronoun"
+        },
+        {
+          "index": 5,
+          "label": "{d5}",
+          "placeholder": "{d5}",
+          "type": "family-companion",
+          "hint": "companion after 'và'"
+        },
+        {
+          "index": 6,
+          "label": "{d6}",
+          "placeholder": "{d6}",
+          "type": "couple",
+          "hint": "couple pronoun"
+        },
+        {
+          "index": 7,
+          "label": "{d7}",
+          "placeholder": "{d7}",
+          "type": "guest",
+          "hint": "guest pronoun"
+        },
+        {
+          "index": 8,
+          "label": "{d8}",
+          "placeholder": "{d8}",
+          "type": "couple",
+          "hint": "couple pronoun"
+        }
+      ]
+    }
+  },
+  "role_presets": {
+    "friend": {
+      "label": "Bạn bè",
+      "pronoun_for_title": "bạn",
+      "default_pronouns": [
+        "bạn",
+        "Bạn",
+        "bạn",
+        "bọn mình",
+        "bạn",
+        "gia đình",
+        "hai đứa",
+        "bạn",
+        "chúng mình"
+      ]
+    },
+    "younger": {
+      "label": "Em út",
+      "pronoun_for_title": "em",
+      "default_pronouns": [
+        "em",
+        "Em",
+        "em",
+        "anh chị",
+        "em",
+        "gia đình",
+        "hai anh chị",
+        "em",
+        "anh chị"
+      ]
+    },
+    "older_male": {
+      "label": "Anh trai",
+      "pronoun_for_title": "anh",
+      "default_pronouns": [
+        "anh",
+        "Anh",
+        "anh",
+        "chúng em",
+        "anh",
+        "gia đình",
+        "hai đứa",
+        "anh",
+        "bọn em"
+      ]
+    },
+    "older_female": {
+      "label": "Chị gái",
+      "pronoun_for_title": "chị",
+      "default_pronouns": [
+        "chị",
+        "Chị",
+        "chị",
+        "chúng em",
+        "chị",
+        "gia đình",
+        "hai đứa",
+        "chị",
+        "bọn em"
+      ]
+    },
+    "cousin": {
+      "label": "Anh chị em họ",
+      "pronoun_for_title": "cậu",
+      "default_pronouns": [
+        "cậu",
+        "Cậu",
+        "cậu",
+        "chúng mình",
+        "cậu",
+        "gia đình",
+        "hai đứa",
+        "cậu",
+        "bọn mình"
+      ]
+    },
+    "elder_male": {
+      "label": "Ông/Bác/Chú",
+      "pronoun_for_title": "ông",
+      "default_pronouns": [
+        "ông",
+        "Ông",
+        "ông",
+        "chúng cháu",
+        "ông",
+        "gia đình",
+        "hai đứa",
+        "ông",
+        "bọn cháu"
+      ]
+    },
+    "elder_female": {
+      "label": "Bà/Cô/Dì/Bác",
+      "pronoun_for_title": "bà",
+      "default_pronouns": [
+        "bà",
+        "Bà",
+        "bà",
+        "chúng cháu",
+        "bà",
+        "gia đình",
+        "hai đứa",
+        "bà",
+        "bọn cháu"
+      ]
+    }
+  },
+  "phrase_presets": [
+    "Kính mời",
+    "Thân mời",
+    "Trân trọng kính mời",
+    "Mời"
+  ],
+  "pronoun_for_title_presets": [
+    "em",
+    "anh",
+    "chị",
+    "cậu",
+    "bạn",
+    "ông",
+    "bà",
+    "cô",
+    "chú",
+    "dì",
+    "bác",
+    "con"
+  ],
+  "guest_pronoun_presets": [
+    "bạn",
+    "em",
+    "anh",
+    "chị",
+    "cậu",
+    "mày",
+    "ông",
+    "bà",
+    "cô",
+    "chú",
+    "bác",
+    "Bạn",
+    "Em",
+    "Anh",
+    "Chị",
+    "Cậu"
+  ],
+  "couple_pronoun_presets": [
+    "bọn mình",
+    "hai đứa",
+    "chúng mình",
+    "tụi mình",
+    "bọn anh",
+    "bọn chị",
+    "chúng tôi",
+    "chúng em"
+  ],
+  "family_companion_presets": [
+    "gia đình",
+    "người thương",
+    "các cháu",
+    "các con"
+  ],
+  "pronoun_for_title_defaults": [
+    {
+      "pronoun_for_title": "bạn",
+      "label": "bạn",
+      "pronouns": [
+        "Bạn",
+        "bạn",
+        "bạn",
+        "banj",
+        "bạn",
+        "bạnn",
+        "bann",
+        "banj",
+        "bannn",
+        "em"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,2476 @@
+/**
+ * Admin Editor Frontend
+ * Handles tab navigation, table/tree editors, and save/discard/reset workflows
+ */
+
+// API base URL
+const API_BASE = '/api/admin';
+
+// File registry (populated from server)
+let fileRegistry = [];
+
+// State management
+const current = {};  // Last persisted state from server
+const draft = {};    // Mutable draft used by editor
+let activeFileKey = null;
+
+let isAuthenticated = false;
+
+// DOM elements
+const tabNav = document.getElementById('tabNav');
+const editorContainer = document.getElementById('editorContainer');
+const statusIndicator = document.getElementById('statusIndicator');
+const dirtyIndicator = document.getElementById('dirtyIndicator');
+const btnSave = document.getElementById('btnSave');
+const btnDiscard = document.getElementById('btnDiscard');
+const btnReset = document.getElementById('btnReset');
+const confirmModal = document.getElementById('confirmModal');
+const modalTitle = document.getElementById('modalTitle');
+const modalMessage = document.getElementById('modalMessage');
+const modalConfirmBtn = document.getElementById('modalConfirmBtn');
+
+/* ===================== AUTHENTICATION ===================== */
+
+const loginOverlay = document.getElementById('loginOverlay');
+const loginForm = document.getElementById('loginForm');
+const loginError = document.getElementById('loginError');
+const btnLogout = document.getElementById('btnLogout');
+
+function showLoginOverlay() {
+    loginOverlay.classList.add('active');
+    document.querySelector('.admin-container').classList.add('auth-hidden');
+    const usernameField = document.getElementById('loginUsername');
+    if (usernameField) usernameField.focus();
+}
+
+function hideLoginOverlay() {
+    loginOverlay.classList.remove('active');
+    document.querySelector('.admin-container').classList.remove('auth-hidden');
+}
+
+function showLoginError(message) {
+    loginError.textContent = message;
+    loginError.style.display = 'block';
+}
+
+function hideLoginError() {
+    loginError.style.display = 'none';
+}
+
+async function checkAuthStatus() {
+    try {
+        const res = await fetch(`${API_BASE}/auth/status`);
+        const result = await res.json();
+        isAuthenticated = result.success && result.data && result.data.authenticated;
+    } catch (e) {
+        isAuthenticated = false;
+    }
+    return isAuthenticated;
+}
+
+async function handleLogin(event) {
+    event.preventDefault();
+    hideLoginError();
+
+    const username = document.getElementById('loginUsername').value.trim();
+    const password = document.getElementById('loginPassword').value;
+
+    if (!username || !password) {
+        showLoginError('Please enter username and password.');
+        return;
+    }
+
+    const btn = document.getElementById('btnLogin');
+    btn.disabled = true;
+    btn.textContent = 'Signing in...';
+
+    try {
+        const res = await fetch(`${API_BASE}/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password }),
+        });
+        const result = await res.json();
+
+        if (res.ok && result.success) {
+            isAuthenticated = true;
+            hideLoginOverlay();
+            hideLoginError();
+            document.getElementById('loginPassword').value = '';
+            init();
+        } else if (res.status === 429) {
+            showLoginError('Too many login attempts. Please try again later.');
+        } else {
+            showLoginError(result.error || 'Invalid username or password.');
+        }
+    } catch (e) {
+        showLoginError('Network error. Please check your connection.');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Sign In';
+    }
+}
+
+async function handleLogout() {
+    try {
+        await fetch(`${API_BASE}/auth/logout`, { method: 'POST' });
+    } catch (e) {
+        // Ignore network errors on logout
+    }
+    isAuthenticated = false;
+    showLoginOverlay();
+}
+
+/* ===================== INITIALIZATION ===================== */
+
+async function init() {
+    try {
+        // Fetch file registry
+        const response = await fetch(`${API_BASE}/files`);
+        const result = await response.json();
+        
+        if (response.status === 401) {
+            throw new Error('AUTH_REQUIRED');
+        }
+        
+        if (!result.success) {
+            throw new Error(result.error);
+        }
+        
+        fileRegistry = result.data;
+        
+        // Build tabs
+        buildTabs();
+        
+        // Activate first tab
+        if (fileRegistry.length > 0) {
+            await activateTab(fileRegistry[0].key);
+        }
+    } catch (err) {
+        if (err.message === 'AUTH_REQUIRED') {
+            showLoginOverlay();
+            return;
+        }
+        editorContainer.innerHTML = `<p class="loading" style="color: var(--danger);">Error: ${err.message}</p>`;
+    }
+}
+
+function buildTabs() {
+    tabNav.innerHTML = fileRegistry.map(file => `
+        <button class="tab-btn" data-key="${file.key}" onclick="activateTab('${file.key}')">
+            ${file.label}
+        </button>
+    `).join('');
+}
+
+async function activateTab(fileKey) {
+    // Update active state
+    activeFileKey = fileKey;
+    
+    // Update tab UI
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.key === fileKey);
+    });
+    
+    // Load file data if not cached
+    if (!current[fileKey]) {
+        await loadFile(fileKey);
+    }
+
+    // Guest-links depends on pronoun map data for smart defaults/suggestions
+    if (fileKey === 'guest-links') {
+        await ensurePronounMapLoaded();
+    }
+    
+    // Render editor
+    renderEditor();
+    updateDirtyStatus();
+}
+
+async function loadFile(fileKey) {
+    setStatus('Loading...');
+    
+    try {
+        const response = await fetch(`${API_BASE}/files/${fileKey}`);
+
+        if (response.status === 401) {
+            showLoginOverlay();
+            return;
+        }
+
+        const result = await response.json();
+        
+        if (!result.success) {
+            throw new Error(result.error);
+        }
+        
+        current[fileKey] = deepClone(result.data);
+        draft[fileKey] = deepClone(result.data);
+        
+        setStatus('Ready');
+    } catch (err) {
+        setStatus(`Error: ${err.message}`, true);
+        throw err;
+    }
+}
+
+async function ensurePronounMapLoaded() {
+    if (current.pronoun) return;
+
+    const hasPronounFile = fileRegistry.some(file => file.key === 'pronoun');
+    if (!hasPronounFile) return;
+
+    await loadFile('pronoun');
+}
+
+/* ===================== DIRTY STATE ===================== */
+
+function isDirty() {
+    if (!activeFileKey || !current[activeFileKey] || !draft[activeFileKey]) {
+        return false;
+    }
+    return !deepEqual(current[activeFileKey], draft[activeFileKey]);
+}
+
+function updateDirtyStatus() {
+    const dirty = isDirty();
+    dirtyIndicator.style.display = dirty ? 'inline' : 'none';
+    
+    // Set disabled state using both attribute AND class for reliability
+    // This ensures CSS can target both :disabled and .btn-disabled
+    const setButtonState = (btn, isDisabled) => {
+        btn.disabled = isDisabled;
+        btn.classList.toggle('btn-disabled', isDisabled);
+    };
+    
+    setButtonState(btnSave, !dirty);
+    setButtonState(btnDiscard, !dirty);
+}
+
+/* ===================== ACTIONS ===================== */
+
+async function handleSave() {
+    if (!activeFileKey || !isDirty()) return;
+    
+    setStatus('Saving...');
+    
+    try {
+        const response = await fetch(`${API_BASE}/files/${activeFileKey}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(draft[activeFileKey])
+        });
+        
+        if (response.status === 401) {
+            showLoginOverlay();
+            return;
+        }
+        
+        const result = await response.json();
+        
+        if (!result.success) {
+            throw new Error(result.error);
+        }
+        
+        current[activeFileKey] = deepClone(result.data);
+        draft[activeFileKey] = deepClone(result.data);
+        
+        setStatus('Saved successfully!');
+        updateDirtyStatus();
+        
+        setTimeout(() => setStatus('Ready'), 2000);
+    } catch (err) {
+        setStatus(`Save failed: ${err.message}`, true);
+    }
+}
+
+async function handleDiscard() {
+    if (!activeFileKey || !isDirty()) return;
+    
+    // Reload from server
+    await loadFile(activeFileKey);
+    renderEditor();
+    updateDirtyStatus();
+    setStatus('Discarded changes');
+}
+
+async function handleReset() {
+    if (!activeFileKey) return;
+    
+    showModal(
+        'Reset to Default',
+        `Are you sure you want to reset "${activeFileKey}" to its default state? This will overwrite all current data.`,
+        async () => {
+            closeModal();
+            setStatus('Resetting...');
+            
+            try {
+                const response = await fetch(`${API_BASE}/files/${activeFileKey}/reset`, {
+                    method: 'POST'
+                });
+                
+                if (response.status === 401) {
+                    showLoginOverlay();
+                    return;
+                }
+                
+                const result = await response.json();
+                
+                if (!result.success) {
+                    throw new Error(result.error);
+                }
+                
+                current[activeFileKey] = deepClone(result.data);
+                draft[activeFileKey] = deepClone(result.data);
+                
+                renderEditor();
+                updateDirtyStatus();
+                setStatus('Reset to default successfully!');
+                
+                setTimeout(() => setStatus('Ready'), 2000);
+            } catch (err) {
+                setStatus(`Reset failed: ${err.message}`, true);
+            }
+        }
+    );
+}
+
+/* ===================== MODAL ===================== */
+
+function showModal(title, message, onConfirm) {
+    modalTitle.textContent = title;
+    modalMessage.textContent = message;
+    modalConfirmBtn.onclick = onConfirm;
+    confirmModal.style.display = 'flex';
+}
+
+function closeModal() {
+    confirmModal.style.display = 'none';
+}
+
+/* ===================== EDITOR RENDERING ===================== */
+
+function renderEditor() {
+    const file = fileRegistry.find(f => f.key === activeFileKey);
+    if (!file) return;
+    
+    const data = draft[activeFileKey];
+    
+    if (file.key === 'wedding') {
+        renderTreeEditor(data);
+    } else if (file.key === 'story-layout') {
+        renderStoryLayoutEditor(data);
+    } else if (file.key === 'gallery') {
+        renderGalleryEditor(data);
+    } else if (file.key === 'guest-links') {
+        renderGuestLinksEditor(data);
+    } else {
+        renderTableEditor(data, file);
+    }
+}
+
+/* ===================== GALLERY EDITOR ===================== */
+
+function renderGalleryEditor(data) {
+    const photos = data.photos || [];
+    const sizes = data.sizes || {};
+    
+    let html = `
+        <div class="gallery-editor">
+            <!-- Photos Section -->
+            <div class="gallery-photos-section">
+                <h3 class="section-title">📸 Photos (${photos.length})</h3>
+                ${renderPhotosTable(photos)}
+            </div>
+            
+            <!-- Sizes Section -->
+            <div class="gallery-sizes-section">
+                <h3 class="section-title">📐 Sizes Configuration</h3>
+                ${renderSizesEditor(sizes)}
+            </div>
+        </div>
+    `;
+    
+    editorContainer.innerHTML = html;
+}
+
+function renderPhotosTable(photos) {
+    if (photos.length === 0) {
+        return `<p class="loading">No photos. <button class="btn btn-add-row" onclick="addGalleryPhoto()">+ Add Photo</button></p>`;
+    }
+    
+    let html = `
+        <table class="table-editor photos-table">
+            <thead>
+                <tr>
+                    <th>Preview</th>
+                    <th>src</th>
+                    <th>alt</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+    
+    photos.forEach((photo, index) => {
+        html += `
+            <tr>
+                <td class="photo-preview-cell">
+                    ${photo.src ? `<img src="${escapeHtml(toSafePreviewUrl(photo.src))}" alt="${escapeHtml(photo.alt || '')}" class="photo-preview-thumb" loading="lazy">` : '<span class="no-preview">No image</span>'}
+                </td>
+                <td class="src-cell">
+                    <div class="src-input-group">
+                        <input type="text" value="${escapeHtml(photo.src || '')}"
+                               onchange="updateGalleryPhoto(${index}, 'src', this.value)"
+                               placeholder="/assets/path/to/image.jpg">
+                        <button class="btn btn-browse" onclick="openAssetPicker(${index})" title="Browse assets">📁</button>
+                    </div>
+                </td>
+                <td>
+                    <input type="text" value="${escapeHtml(photo.alt || '')}"
+                           onchange="updateGalleryPhoto(${index}, 'alt', this.value)"
+                           placeholder="Image description">
+                </td>
+                <td class="table-editor-actions">
+                    <button class="btn btn-delete-row" onclick="deleteGalleryPhoto(${index})">🗑️</button>
+                </td>
+            </tr>
+        `;
+    });
+    
+    html += `
+            </tbody>
+        </table>
+        <button class="btn btn-add-row" onclick="addGalleryPhoto()">+ Add Photo</button>
+    `;
+    
+    return html;
+}
+
+function renderSizesEditor(sizes) {
+    const sizeFields = ['main_img_width', 'thumb_size', 'nav_btn_size', 'nav_icon_size'];
+    
+    let html = `
+        <table class="table-editor sizes-table">
+            <thead>
+                <tr>
+                    <th>Property</th>
+                    <th>Value</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+    
+    sizeFields.forEach(field => {
+        const value = sizes[field] || '';
+        html += `
+            <tr>
+                <td>${escapeHtml(field)}</td>
+                <td>
+                    <input type="text" value="${escapeHtml(String(value))}"
+                           onchange="updateGallerySize('${escapeHtml(field)}', this.value)"
+                           placeholder="e.g., 100% or 0.8rem">
+                </td>
+            </tr>
+        `;
+    });
+    
+    html += `
+            </tbody>
+        </table>
+        <p class="hint">Note: Sizes use rem units. 1rem = 100px at 500px screen width.</p>
+    `;
+    
+    return html;
+}
+
+/* ===================== GALLERY ACTIONS ===================== */
+
+function updateGalleryPhoto(index, key, value) {
+    if (draft[activeFileKey].photos && draft[activeFileKey].photos[index]) {
+        draft[activeFileKey].photos[index][key] = value;
+        updateDirtyStatus();
+    }
+}
+
+function addGalleryPhoto() {
+    if (!draft[activeFileKey].photos) {
+        draft[activeFileKey].photos = [];
+    }
+    
+    draft[activeFileKey].photos.push({
+        src: '',
+        alt: ''
+    });
+    
+    renderEditor();
+    updateDirtyStatus();
+}
+
+function deleteGalleryPhoto(index) {
+    if (draft[activeFileKey].photos) {
+        draft[activeFileKey].photos.splice(index, 1);
+        renderEditor();
+        updateDirtyStatus();
+    }
+}
+
+function updateGallerySize(key, value) {
+    if (!draft[activeFileKey].sizes) {
+        draft[activeFileKey].sizes = {};
+    }
+    draft[activeFileKey].sizes[key] = value;
+    updateDirtyStatus();
+}
+
+/* ===================== ASSET PICKER ===================== */
+
+let assetPickerCallback = null;
+let currentAssetPickerIndex = null;
+
+function openAssetPicker(photoIndex) {
+    currentAssetPickerIndex = photoIndex;
+    showAssetPickerModal();
+}
+
+function showAssetPickerModal() {
+    // Create modal if not exists
+    let modal = document.getElementById('assetPickerModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'assetPickerModal';
+        modal.className = 'asset-picker-modal';
+        modal.innerHTML = `
+            <div class="asset-picker-content">
+                <div class="asset-picker-header">
+                    <h3>📁 Select Asset</h3>
+                    <button class="btn btn-close" onclick="closeAssetPicker()">✕</button>
+                </div>
+                <div class="asset-picker-body">
+                    <div class="asset-picker-sidebar" id="assetPickerSidebar">
+                        <!-- Directory tree will be loaded here -->
+                    </div>
+                    <div class="asset-picker-main" id="assetPickerMain">
+                        <!-- File list will be loaded here -->
+                    </div>
+                </div>
+                <div class="asset-picker-footer">
+                    <span id="assetPickerPath">/assets</span>
+                    <button class="btn btn-cancel" onclick="closeAssetPicker()">Cancel</button>
+                    <button class="btn btn-confirm" id="assetPickerConfirm" onclick="confirmAssetSelection()" disabled>Select</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+    
+    modal.style.display = 'flex';
+    loadAssetTree();
+    loadAssetDirectory('/assets');
+}
+
+function closeAssetPicker() {
+    const modal = document.getElementById('assetPickerModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+    currentAssetPickerIndex = null;
+    treeAssetPickerPath = null;
+    window.selectedAssetPath = null;
+}
+
+function loadAssetTree() {
+    const sidebar = document.getElementById('assetPickerSidebar');
+    sidebar.innerHTML = '<p class="loading">Loading...</p>';
+    
+    fetch(`${API_BASE}/assets/tree`)
+        .then(response => {
+            if (response.status === 401) {
+                showLoginOverlay();
+                return;
+            }
+            return response.json();
+        })
+        .then(result => {
+            if (!result) {
+                return;
+            }
+            if (!result.success) {
+                sidebar.innerHTML = `<p class="error">Error: ${result.error}</p>`;
+                return;
+            }
+            
+            sidebar.innerHTML = renderAssetTreeNodes(result.data.children, '/assets');
+        })
+        .catch(err => {
+            sidebar.innerHTML = `<p class="error">Failed to load asset tree</p>`;
+        });
+}
+
+function renderAssetTreeNodes(nodes, basePath) {
+    if (!nodes || nodes.length === 0) {
+        return '<p class="hint">No folders</p>';
+    }
+    
+    return nodes.map(node => {
+        if (node.type === 'directory') {
+            return `
+                <div class="asset-tree-item directory" onclick="loadAssetDirectory('${escapeHtml(node.webPath)}')">
+                    <span class="tree-icon">📁</span>
+                    <span class="tree-name">${escapeHtml(node.name)}</span>
+                </div>
+            `;
+        }
+        return '';
+    }).join('');
+}
+
+function loadAssetDirectory(dirPath) {
+    const main = document.getElementById('assetPickerMain');
+    const pathDisplay = document.getElementById('assetPickerPath');
+    const confirmBtn = document.getElementById('assetPickerConfirm');
+    
+    main.innerHTML = '<p class="loading">Loading...</p>';
+    pathDisplay.textContent = dirPath;
+    confirmBtn.disabled = true;
+    window.selectedAssetPath = null;
+    
+    const dirParam = dirPath === '/assets' ? '' : dirPath.replace('/assets/', '');
+    
+    fetch(`${API_BASE}/assets/list?dir=${encodeURIComponent(dirParam)}`)
+        .then(response => {
+            if (response.status === 401) {
+                showLoginOverlay();
+                return;
+            }
+            return response.json();
+        })
+        .then(result => {
+            if (!result) {
+                return;
+            }
+            if (!result.success) {
+                main.innerHTML = `<p class="error">Error: ${result.error}</p>`;
+                return;
+            }
+            
+            let html = '';
+            
+            // Parent directory link
+            if (result.data.parentDir) {
+                html += `
+                    <div class="asset-item parent" onclick="loadAssetDirectory('${escapeHtml(result.data.parentDir)}')">
+                        <span class="asset-icon">📁</span>
+                        <span class="asset-name">..</span>
+                    </div>
+                `;
+            }
+            
+            // Directories
+            result.data.items.filter(item => item.type === 'directory').forEach(item => {
+                html += `
+                    <div class="asset-item directory" onclick="loadAssetDirectory('${escapeHtml(item.webPath)}')">
+                        <span class="asset-icon">📁</span>
+                        <span class="asset-name">${escapeHtml(item.name)}</span>
+                    </div>
+                `;
+            });
+            
+            // Files
+            result.data.items.filter(item => item.type === 'file').forEach(item => {
+                const ext = item.name.split('.').pop().toLowerCase();
+                const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext);
+                const previewUrl = typeof item.previewUrl === 'string' && item.previewUrl
+                    ? item.previewUrl
+                    : toSafePreviewUrl(item.webPath);
+                html += `
+                    <div class="asset-item file ${isImage ? 'image' : ''}"
+                         onclick="selectAsset('${escapeHtml(item.webPath)}', this)"
+                         data-path="${escapeHtml(item.webPath)}">
+                        <span class="asset-icon">${isImage ? '🖼️' : '📄'}</span>
+                        <span class="asset-name">${escapeHtml(item.name)}</span>
+                        ${isImage ? `<img src="${escapeHtml(previewUrl)}" class="asset-thumb" alt="" loading="lazy">` : ''}
+                    </div>
+                `;
+            });
+            
+            main.innerHTML = html || '<p class="hint">Empty directory</p>';
+        })
+        .catch(err => {
+            main.innerHTML = `<p class="error">Failed to load directory</p>`;
+        });
+}
+
+function selectAsset(path, element) {
+    // Remove previous selection
+    document.querySelectorAll('.asset-item.selected').forEach(el => {
+        el.classList.remove('selected');
+    });
+    
+    // Add selection to clicked item
+    element.classList.add('selected');
+    
+    // Store selected path
+    window.selectedAssetPath = path;
+    
+    // Enable confirm button
+    document.getElementById('assetPickerConfirm').disabled = false;
+}
+
+function confirmAssetSelection() {
+    // Handle gallery picker
+    if (window.selectedAssetPath && currentAssetPickerIndex !== null) {
+        updateGalleryPhoto(currentAssetPickerIndex, 'src', window.selectedAssetPath);
+        closeAssetPicker();
+        renderEditor();
+        return;
+    }
+    
+    // Handle tree editor picker
+    if (window.selectedAssetPath && treeAssetPickerPath) {
+        updateTreeValue(treeAssetPickerPath, window.selectedAssetPath);
+        closeAssetPicker();
+        renderEditor();
+        return;
+    }
+}
+
+// Tree asset picker path storage
+let treeAssetPickerPath = null;
+
+function openTreeAssetPicker(path) {
+    treeAssetPickerPath = path;
+    currentAssetPickerIndex = null; // Clear gallery index
+    showAssetPickerModal();
+}
+
+/* ===================== GUEST LINKS EDITOR ===================== */
+
+// Preset options for comboboxes
+const PHRASE_PRESETS = ['Kính mời', 'Thân mời', 'Trân trọng kính mời', 'Mời'];
+const PRONOUN_FOR_TITLE_PRESETS = ['em', 'anh', 'chị', 'cậu', 'bạn', 'ông', 'bà', 'cô', 'chú', 'dì', 'bác', 'con'];
+const GUEST_PRONOUN_PRESETS = ['bạn', 'em', 'anh', 'chị', 'cậu', 'mày', 'ông', 'bà', 'cô', 'chú', 'bác', 'Bạn', 'Em', 'Anh', 'Chị', 'Cậu'];
+const COUPLE_PRONOUN_PRESETS = ['bọn mình', 'hai đứa', 'chúng mình', 'tụi mình', 'bọn anh', 'bọn chị', 'chúng tôi', 'chúng em'];
+const FAMILY_COMPANION_PRESETS = ['gia đình', 'người thương', 'các cháu', 'các con'];
+const FAMILY_COMPANION_SLOT_INDEX = 5;
+const GUEST_LINKS_LOCAL_DEFAULT_PRONOUNS = ['bạn', 'Bạn', 'bạn', 'bọn mình', 'bạn', 'gia đình', 'hai đứa', 'bạn', 'chúng mình'];
+const GUEST_LINKS_LOCAL_DEFAULT_INVITATION_BODY = "Gửi đến {d0} tấm thiệp cưới đầy yêu thương.\n{d1} nhận được lời mời này vì {d2} là người đặc biệt với {d3}.\nMong {d4}{d5} sẽ đến chung vui.\nCùng chứng kiến khoảnh khắc hạnh phúc nhất của {d6}.\nCảm ơn vì luôn bên cạnh và yêu thương.\nHy vọng {d7} sẽ là người chứng kiến khoảnh khắc quan trọng nhất trong cuộc đời {d8}!";
+const GUEST_PRONOUN_SLOT_INDEXES = [0, 1, 2, 4, 7];
+const COUPLE_PRONOUN_SLOT_INDEXES = [3, 6, 8];
+
+const guestLinksUiState = {
+    selectedIndexByFileKey: {
+        'guest-links': 0
+    }
+};
+
+// Pronoun slot metadata: index -> { label, type }
+const PRONOUN_SLOTS = [
+    { label: '{d0}', hint: 'guest', type: 'guest' },
+    { label: '{d1}', hint: 'Guest (cap)', type: 'guest' },
+    { label: '{d2}', hint: 'guest', type: 'guest' },
+    { label: '{d3}', hint: 'couple', type: 'couple' },
+    { label: '{d4}', hint: 'guest', type: 'guest' },
+    { label: '{d5}', hint: 'companion after "và"', type: 'family-companion' },
+    { label: '{d6}', hint: 'couple', type: 'couple' },
+    { label: '{d7}', hint: 'guest', type: 'guest' },
+    { label: '{d8}', hint: 'couple', type: 'couple' }
+];
+
+function buildInvitationTitleClient(entry) {
+    const parts = [entry.phrase, entry.pronoun_for_title, entry.guest_name].filter(Boolean);
+    return parts.join(' ') + '!';
+}
+
+function capitalizeFirstWord(value) {
+    const text = String(value || '').trim();
+    if (!text) return '';
+    return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+function getPronounMapRoot() {
+    const pronounData = draft.pronoun || current.pronoun || {};
+    if (!pronounData || typeof pronounData !== 'object' || Array.isArray(pronounData)) {
+        return {};
+    }
+
+    const mapping = pronounData.couple_pronouns_by_guest;
+    if (!mapping || typeof mapping !== 'object' || Array.isArray(mapping)) {
+        return {};
+    }
+
+    return mapping;
+}
+
+function getCouplePronounOptionsForGuest(guestPronoun) {
+    const key = String(guestPronoun || '').trim();
+    const mapping = getPronounMapRoot();
+    const mapped = Array.isArray(mapping[key]) ? mapping[key].filter(Boolean) : [];
+
+    const merged = [...mapped, ...COUPLE_PRONOUN_PRESETS];
+    return Array.from(new Set(merged));
+}
+
+function getPronounForTitleOptions() {
+    const mapKeys = Object.keys(getPronounMapRoot());
+    return Array.from(new Set([...PRONOUN_FOR_TITLE_PRESETS, ...mapKeys]));
+}
+
+function isFamilyCompanionEnabled(entry) {
+    return entry?.family_companion_enabled !== false;
+}
+
+function normalizePronounArray(sourcePronouns) {
+    const targetLength = PRONOUN_SLOTS.length;
+    const defaults = GUEST_LINKS_LOCAL_DEFAULT_PRONOUNS;
+    const rawValues = Array.isArray(sourcePronouns) ? sourcePronouns : [];
+
+    // Migrate old format (8 slots d0-d7) => insert new companion slot at d5
+    if (rawValues.length === targetLength - 1) {
+        const migrated = [...rawValues.slice(0, FAMILY_COMPANION_SLOT_INDEX), defaults[FAMILY_COMPANION_SLOT_INDEX], ...rawValues.slice(FAMILY_COMPANION_SLOT_INDEX)];
+        return Array.from({ length: targetLength }, (_, slot) => {
+            const value = migrated[slot];
+            return typeof value === 'string' && value ? value : (defaults[slot] || '');
+        });
+    }
+
+    return Array.from({ length: targetLength }, (_, slot) => {
+        const value = rawValues[slot];
+        return typeof value === 'string' && value ? value : (defaults[slot] || '');
+    });
+}
+
+function ensureGuestPronouns(entry) {
+    if (!entry || typeof entry !== 'object') return;
+    entry.pronouns = normalizePronounArray(entry.pronouns);
+}
+
+function getFamilyCompanionOptions(entry) {
+    const currentValue = String(entry?.pronouns?.[FAMILY_COMPANION_SLOT_INDEX] || '').trim();
+    return Array.from(new Set([currentValue, ...FAMILY_COMPANION_PRESETS].filter(Boolean)));
+}
+
+function getResolvedPronounValue(entry, slotIndex, fallbackValue) {
+    const rawValue = (typeof entry?.pronouns?.[slotIndex] === 'string' && entry.pronouns[slotIndex])
+        ? entry.pronouns[slotIndex]
+        : fallbackValue;
+
+    if (slotIndex === FAMILY_COMPANION_SLOT_INDEX) {
+        const companion = String(rawValue || '').trim();
+        if (!isFamilyCompanionEnabled(entry) || !companion) {
+            return '';
+        }
+        return ` và ${companion}`;
+    }
+
+    return rawValue;
+}
+
+function applyPronounForTitleDefaults(entry) {
+    if (!entry || typeof entry !== 'object') return;
+
+    ensureGuestPronouns(entry);
+
+    const guestPronoun = String(entry.pronoun_for_title || '').trim();
+    if (!guestPronoun) return;
+
+    GUEST_PRONOUN_SLOT_INDEXES.forEach((slotIndex) => {
+        entry.pronouns[slotIndex] = slotIndex === 1
+            ? capitalizeFirstWord(guestPronoun)
+            : guestPronoun;
+    });
+
+    const coupleOptions = getCouplePronounOptionsForGuest(guestPronoun);
+    COUPLE_PRONOUN_SLOT_INDEXES.forEach((slotIndex, order) => {
+        const fallback = coupleOptions[0] || '';
+        entry.pronouns[slotIndex] = coupleOptions[order] || fallback;
+    });
+}
+
+function renderCombobox(value, options, onchangeExpr, uniqueId) {
+    const escapedValue = escapeHtml(String(value || ''));
+    const optionsHtml = options.map(opt =>
+        `<option value="${escapeHtml(opt)}">`
+    ).join('');
+
+    return `
+        <div class="combobox-wrapper">
+            <input type="text" list="datalist-${uniqueId}"
+                   value="${escapedValue}"
+                   onchange="${onchangeExpr}">
+            <datalist id="datalist-${uniqueId}">
+                ${optionsHtml}
+            </datalist>
+        </div>
+    `;
+}
+
+function getGuestLinksSelectedIndex(entries) {
+    if (!Array.isArray(entries) || entries.length === 0) {
+        guestLinksUiState.selectedIndexByFileKey['guest-links'] = -1;
+        return -1;
+    }
+
+    const rawIndex = guestLinksUiState.selectedIndexByFileKey['guest-links'];
+    const normalizedIndex = Number.isInteger(rawIndex) ? rawIndex : 0;
+    const clampedIndex = Math.min(Math.max(normalizedIndex, 0), entries.length - 1);
+    guestLinksUiState.selectedIndexByFileKey['guest-links'] = clampedIndex;
+    return clampedIndex;
+}
+
+function setGuestLinksSelectedIndex(index, entries) {
+    if (!Array.isArray(entries) || entries.length === 0) {
+        guestLinksUiState.selectedIndexByFileKey['guest-links'] = -1;
+        return -1;
+    }
+
+    const numericIndex = Number.isFinite(index) ? Math.trunc(index) : 0;
+    const clampedIndex = Math.min(Math.max(numericIndex, 0), entries.length - 1);
+    guestLinksUiState.selectedIndexByFileKey['guest-links'] = clampedIndex;
+    return clampedIndex;
+}
+
+function selectGuestEntry(index) {
+    const fileData = draft['guest-links'];
+    if (!fileData || !Array.isArray(fileData.entries)) return;
+    setGuestLinksSelectedIndex(index, fileData.entries);
+    renderEditor();
+}
+
+function normalizeGuestEntryForEditor(entry) {
+    const source = (entry && typeof entry === 'object') ? entry : {};
+    const pronouns = normalizePronounArray(source.pronouns);
+
+    return {
+        ...source,
+        token: typeof source.token === 'string' ? source.token : '',
+        phrase: typeof source.phrase === 'string' ? source.phrase : '',
+        pronoun_for_title: typeof source.pronoun_for_title === 'string' ? source.pronoun_for_title : '',
+        guest_name: typeof source.guest_name === 'string' ? source.guest_name : '',
+        invitation_title: typeof source.invitation_title === 'string' ? source.invitation_title : '',
+        pronouns,
+        family_companion_enabled: source.family_companion_enabled !== false,
+        custom_body_enabled: Boolean(source.custom_body_enabled),
+        custom_body: typeof source.custom_body === 'string' ? source.custom_body : ''
+    };
+}
+
+function getGuestLinksInvitationContext() {
+    const weddingData = draft.wedding || current.wedding || {};
+    const invitation = (weddingData && typeof weddingData === 'object' && weddingData.invitation)
+        ? weddingData.invitation
+        : {};
+
+    const defaultPronouns = Array.isArray(invitation.default_pronouns)
+        ? invitation.default_pronouns
+        : GUEST_LINKS_LOCAL_DEFAULT_PRONOUNS;
+
+    const normalizedDefaults = Array.from({ length: PRONOUN_SLOTS.length }, (_, slot) => {
+        const value = defaultPronouns[slot];
+        return typeof value === 'string' && value ? value : (GUEST_LINKS_LOCAL_DEFAULT_PRONOUNS[slot] || '');
+    });
+
+    return {
+        title: (typeof invitation.title === 'string' && invitation.title.trim()) ? invitation.title.trim() : 'Kính mời',
+        body: (typeof invitation.body === 'string' && invitation.body.trim())
+            ? invitation.body
+            : GUEST_LINKS_LOCAL_DEFAULT_INVITATION_BODY,
+        closing: (typeof invitation.closing === 'string' && invitation.closing.trim()) ? invitation.closing : '· · · ♥ · · ·',
+        defaultPronouns: normalizedDefaults
+    };
+}
+
+function renderGuestPreviewMultiline(text) {
+    return escapeHtml(String(text || '')).replace(/\n/g, '<br>');
+}
+
+function resolveGuestPreviewBody(entry) {
+    const invitationContext = getGuestLinksInvitationContext();
+
+    if (entry.custom_body_enabled && entry.custom_body.trim()) {
+        return entry.custom_body;
+    }
+
+    if (!invitationContext.body) {
+        return '';
+    }
+
+    let renderedBody = invitationContext.body;
+    for (let slot = 0; slot < PRONOUN_SLOTS.length; slot++) {
+        const placeholder = `{d${slot}}`;
+        const pronoun = getResolvedPronounValue(entry, slot, invitationContext.defaultPronouns[slot]);
+        renderedBody = renderedBody.split(placeholder).join(pronoun || '');
+    }
+
+    return renderedBody;
+}
+
+function renderGuestPreview(entry) {
+    const invitationContext = getGuestLinksInvitationContext();
+    const computedTitle = buildInvitationTitleClient(entry);
+    const resolvedTitle = (entry.invitation_title || '').trim()
+        || (computedTitle && computedTitle !== '!' ? computedTitle : '')
+        || invitationContext.title;
+    const resolvedBody = resolveGuestPreviewBody(entry);
+    const resolvedClosing = invitationContext.closing || '· · · ♥ · · ·';
+
+    return `
+        <div class="guest-preview-card">
+            <div class="guest-preview-label">Live Preview</div>
+            <div class="guest-preview-title">${escapeHtml(resolvedTitle || 'Kính mời')}</div>
+            <div class="guest-preview-divider"></div>
+            <div class="guest-preview-body">${renderGuestPreviewMultiline(resolvedBody)}</div>
+            <div class="guest-preview-closing">${renderGuestPreviewMultiline(resolvedClosing)}</div>
+        </div>
+    `;
+}
+
+function renderGuestLinksListPanel(entries, selectedIndex) {
+    if (!entries.length) {
+        return `
+            <div class="guest-links-list-panel">
+                <div class="guest-links-panel-header">
+                    <div>
+                        <h4>Guest List</h4>
+                        <p>0 entries</p>
+                    </div>
+                    <button class="btn btn-add-row" onclick="addGuestEntry()">+ Add Guest</button>
+                </div>
+                <div class="guest-links-empty-state">
+                    <p>No guest entries yet.</p>
+                    <button class="btn btn-add-row" onclick="addGuestEntry()">+ Add Guest</button>
+                </div>
+            </div>
+        `;
+    }
+
+    const rowsHtml = entries.map((entry, index) => {
+        const normalized = normalizeGuestEntryForEditor(entry);
+        const builtTitle = buildInvitationTitleClient(normalized);
+        const title = normalized.invitation_title || (builtTitle !== '!' ? builtTitle : '') || '(Chưa có tiêu đề)';
+        const tokenDisplay = normalized.token || '—';
+
+        return `
+            <tr class="guest-list-row ${index === selectedIndex ? 'is-selected' : ''}"
+                onclick="selectGuestEntry(${index})"
+                title="Click to edit">
+                <td class="guest-list-token-cell">
+                    <span class="guest-token-pill"
+                          title="${escapeHtml(normalized.token || 'No token generated')} · Double-click to copy"
+                          ondblclick="event.stopPropagation(); copyGuestToken(${index});">${escapeHtml(tokenDisplay)}</span>
+                </td>
+                <td class="guest-list-title-cell" title="${escapeHtml(title)}">${escapeHtml(title)}</td>
+            </tr>
+        `;
+    }).join('');
+
+    return `
+        <div class="guest-links-list-panel">
+            <div class="guest-links-panel-header">
+                <div>
+                    <h4>Guest List</h4>
+                    <p>${entries.length} ${entries.length === 1 ? 'entry' : 'entries'}</p>
+                </div>
+                <button class="btn btn-add-row" onclick="addGuestEntry()">+ Add Guest</button>
+            </div>
+            <div class="guest-links-panel-note">Double-click a token to copy it.</div>
+            <div class="guest-links-list-wrap">
+                <table class="guest-list-table" aria-label="Guest links list">
+                    <thead>
+                        <tr>
+                            <th>Token</th>
+                            <th>Invitation Title</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rowsHtml}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    `;
+}
+
+function renderGuestLinksDetailPanel(entry, index) {
+    if (!entry || index < 0) {
+        return `
+            <div class="guest-links-detail-panel">
+                <div class="guest-links-empty-state guest-links-empty-detail">
+                    <p>No guest selected.</p>
+                    <button class="btn btn-add-row" onclick="addGuestEntry()">+ Add Guest</button>
+                </div>
+            </div>
+        `;
+    }
+
+    const derivedTitle = (entry.invitation_title || '').trim()
+        || (buildInvitationTitleClient(entry) !== '!' ? buildInvitationTitleClient(entry) : '')
+        || 'Kính mời';
+
+    const pronounFieldsHtml = PRONOUN_SLOTS.map((slotMeta, slotIndex) => {
+        const options = slotMeta.type === 'couple'
+            ? getCouplePronounOptionsForGuest(entry.pronoun_for_title)
+            : slotMeta.type === 'family-companion'
+                ? getFamilyCompanionOptions(entry)
+                : GUEST_PRONOUN_PRESETS;
+
+        const isFamilyCompanionSlot = slotMeta.type === 'family-companion';
+        const familyEnabled = isFamilyCompanionEnabled(entry);
+        const datalistId = `datalist-pron-detail-${index}-${slotIndex}`;
+        const familyCompanionControlHtml = isFamilyCompanionSlot
+            ? `
+                <label class="custom-body-toggle" style="margin-bottom: 0.5rem;">
+                    <input type="checkbox" ${familyEnabled ? 'checked' : ''}
+                           onchange="updateGuestFamilyCompanionEnabled(${index}, this.checked)">
+                    <span>Include companion phrase</span>
+                </label>
+                <div class="combobox-wrapper">
+                    <input type="text" list="${datalistId}"
+                           value="${escapeHtml(entry.pronouns[slotIndex] || '')}"
+                           onchange="updateGuestPronoun(${index}, ${slotIndex}, this.value)"
+                           ${familyEnabled ? '' : 'disabled'}>
+                    <datalist id="${datalistId}">
+                        ${options.map(opt => `<option value="${escapeHtml(opt)}">`).join('')}
+                    </datalist>
+                </div>
+            `
+            : renderCombobox(
+                entry.pronouns[slotIndex],
+                options,
+                `updateGuestPronoun(${index}, ${slotIndex}, this.value)`,
+                `pron-detail-${index}-${slotIndex}`
+            );
+
+        return `
+            <div class="guest-pronoun-field">
+                <label class="guest-pronoun-slot-label" for="guest-pronoun-${index}-${slotIndex}">${slotMeta.label}</label>
+                <div class="guest-pronoun-slot-hint">${escapeHtml(slotMeta.hint)}</div>
+                <div id="guest-pronoun-${index}-${slotIndex}">
+                    ${familyCompanionControlHtml}
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    return `
+        <div class="guest-links-detail-panel">
+            <div class="guest-detail-sections">
+                <div class="guest-detail-section">
+                    <h4 class="guest-detail-section-title">Identity</h4>
+                    <div class="guest-detail-grid">
+                        <div class="guest-form-field guest-form-field-full">
+                            <label>Token</label>
+                            <input type="text"
+                                   value="${escapeHtml(entry.token)}"
+                                   readonly
+                                   class="token-input guest-token-readonly"
+                                   title="Double-click to copy token"
+                                   onclick="event.stopPropagation()"
+                                   ondblclick="event.stopPropagation(); copyGuestToken(${index});">
+                            <div class="guest-field-help">Double-click token to copy</div>
+                        </div>
+
+                        <div class="guest-form-field">
+                            <label>Phrase</label>
+                            ${renderCombobox(
+                                entry.phrase,
+                                PHRASE_PRESETS,
+                                `updateGuestEntry(${index}, 'phrase', this.value)`,
+                                `phrase-detail-${index}`
+                            )}
+                        </div>
+
+                        <div class="guest-form-field">
+                            <label>Pronoun for title</label>
+                            ${renderCombobox(
+                                entry.pronoun_for_title,
+                                getPronounForTitleOptions(),
+                                `updateGuestEntry(${index}, 'pronoun_for_title', this.value)`,
+                                `ptitle-detail-${index}`
+                            )}
+                        </div>
+
+                        <div class="guest-form-field guest-form-field-full">
+                            <label>Guest name</label>
+                            <input type="text"
+                                   value="${escapeHtml(entry.guest_name)}"
+                                   onchange="updateGuestEntry(${index}, 'guest_name', this.value)"
+                                   placeholder="Guest name">
+                        </div>
+
+                        <div class="guest-form-field guest-form-field-full">
+                            <label>Invitation title (derived)</label>
+                            <div class="guest-readonly-value" title="${escapeHtml(derivedTitle)}">${escapeHtml(derivedTitle)}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="guest-detail-section">
+                    <h4 class="guest-detail-section-title">Pronouns (d0–d8)</h4>
+                    <div class="guest-pronoun-grid">
+                        ${pronounFieldsHtml}
+                    </div>
+                </div>
+
+                <div class="guest-detail-section guest-custom-body-section">
+                    <h4 class="guest-detail-section-title">Custom body</h4>
+                    <label class="custom-body-toggle">
+                        <input type="checkbox" ${entry.custom_body_enabled ? 'checked' : ''}
+                               onchange="toggleGuestCustomBody(${index}, this.checked)">
+                        <span>Use custom invitation body</span>
+                    </label>
+                    ${entry.custom_body_enabled ? `
+                        <textarea rows="6"
+                                  onchange="updateGuestCustomBody(${index}, this.value)"
+                                  placeholder="Custom invitation body...">${escapeHtml(entry.custom_body)}</textarea>
+                    ` : `
+                        <p class="guest-field-help">Preview uses the wedding invitation template with {d0}..{d8} replacements when custom body is disabled.</p>
+                    `}
+                </div>
+
+                <div class="guest-detail-section">
+                    <h4 class="guest-detail-section-title">Preview</h4>
+                    ${renderGuestPreview(entry)}
+                </div>
+
+                <div class="guest-detail-section">
+                    <h4 class="guest-detail-section-title">Actions</h4>
+                    <div class="guest-detail-actions">
+                        <button class="btn btn-generate" onclick="generateGuestToken(${index})">🔑 Generate Token</button>
+                        <button class="btn btn-delete-row" onclick="deleteGuestEntry(${index})">🗑️ Delete Guest</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function renderGuestLinksEditor(data) {
+    const metaKeys = Object.keys(data).filter(k => k !== 'entries');
+    const entries = Array.isArray(data.entries) ? data.entries : [];
+    const selectedIndex = getGuestLinksSelectedIndex(entries);
+    const selectedEntry = selectedIndex >= 0
+        ? normalizeGuestEntryForEditor(entries[selectedIndex])
+        : null;
+
+    let html = `<div class="guest-links-editor">`;
+
+    // Metadata section
+    if (metaKeys.length > 0) {
+        html += `
+            <div class="guest-links-meta-section">
+                <h3 class="section-title">📋 Metadata</h3>
+                <table class="table-editor">
+                    <tbody>
+        `;
+        metaKeys.forEach(key => {
+            html += `
+                <tr>
+                    <td>${escapeHtml(key)}</td>
+                    <td>${renderObjectValueInput(key, data[key])}</td>
+                </tr>
+            `;
+        });
+        html += `</tbody></table></div>`;
+    }
+
+    html += `
+        <div class="guest-links-entries-section">
+            <h3 class="section-title">👥 Guest Entries (${entries.length})</h3>
+            <div class="guest-links-split">
+                ${renderGuestLinksListPanel(entries, selectedIndex)}
+                ${renderGuestLinksDetailPanel(selectedEntry, selectedIndex)}
+            </div>
+        </div>
+    `;
+
+    html += `</div>`;
+    editorContainer.innerHTML = html;
+}
+
+async function copyTextToClipboard(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+        return;
+    }
+
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.setAttribute('readonly', 'readonly');
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-9999px';
+    document.body.appendChild(textArea);
+    textArea.select();
+
+    try {
+        const success = document.execCommand('copy');
+        if (!success) {
+            throw new Error('Clipboard command failed');
+        }
+    } finally {
+        document.body.removeChild(textArea);
+    }
+}
+
+async function copyGuestToken(index) {
+    try {
+        const fileData = draft['guest-links'];
+        const entries = fileData && Array.isArray(fileData.entries) ? fileData.entries : [];
+        const entry = entries[index];
+        const token = (entry && typeof entry.token === 'string') ? entry.token.trim() : '';
+
+        if (!token) {
+            setStatus('No token available to copy', true);
+            return;
+        }
+
+        await copyTextToClipboard(token);
+        setStatus('Guest token copied to clipboard');
+        setTimeout(() => setStatus('Ready'), 1500);
+    } catch (err) {
+        setStatus(`Copy token failed: ${err.message}`, true);
+    }
+}
+
+/* ===================== GUEST LINKS ACTIONS ===================== */
+
+function updateGuestEntry(index, field, value) {
+    const entry = draft[activeFileKey].entries[index];
+    entry[field] = value;
+
+    if (field === 'pronoun_for_title') {
+        applyPronounForTitleDefaults(entry);
+    }
+
+    // Auto-derive invitation_title whenever phrase/pronoun/name changes
+    if (['phrase', 'pronoun_for_title', 'guest_name'].includes(field)) {
+        entry.invitation_title = buildInvitationTitleClient(entry);
+    }
+
+    renderEditor();
+    updateDirtyStatus();
+}
+
+function updateGuestPronoun(index, slot, value) {
+    const entry = draft[activeFileKey].entries[index];
+    ensureGuestPronouns(entry);
+    entry.pronouns[slot] = value;
+    renderEditor();
+    updateDirtyStatus();
+}
+
+function updateGuestFamilyCompanionEnabled(index, enabled) {
+    const entry = draft[activeFileKey].entries[index];
+    ensureGuestPronouns(entry);
+    entry.family_companion_enabled = Boolean(enabled);
+    renderEditor();
+    updateDirtyStatus();
+}
+
+function toggleGuestCustomBody(index, enabled) {
+    const entry = draft[activeFileKey].entries[index];
+    entry.custom_body_enabled = enabled;
+    renderEditor();
+    updateDirtyStatus();
+}
+
+function updateGuestCustomBody(index, value) {
+    draft[activeFileKey].entries[index].custom_body = value;
+    renderEditor();
+    updateDirtyStatus();
+}
+
+function addGuestEntry() {
+    const entries = draft[activeFileKey].entries;
+    const now = new Date().toISOString();
+    const newEntry = {
+        token: '',
+        phrase: 'Kính mời',
+        pronoun_for_title: '',
+        guest_name: '',
+        invitation_title: '',
+        pronouns: ['bạn', 'Bạn', 'bạn', 'bọn mình', 'bạn', 'gia đình', 'hai đứa', 'bạn', 'chúng mình'],
+        family_companion_enabled: true,
+        custom_body_enabled: false,
+        custom_body: '',
+        created_at: now,
+        updated_at: now
+    };
+    newEntry.invitation_title = buildInvitationTitleClient(newEntry);
+    entries.push(newEntry);
+    setGuestLinksSelectedIndex(entries.length - 1, entries);
+    renderEditor();
+    updateDirtyStatus();
+}
+
+function deleteGuestEntry(index) {
+    const entries = draft[activeFileKey].entries;
+    entries.splice(index, 1);
+    setGuestLinksSelectedIndex(index, entries);
+    renderEditor();
+    updateDirtyStatus();
+}
+
+function bytesToHex(bytes) {
+    return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function getRandomHexToken(byteLength = 16) {
+    if (window.crypto && typeof window.crypto.getRandomValues === 'function') {
+        const bytes = new Uint8Array(byteLength);
+        window.crypto.getRandomValues(bytes);
+        return bytesToHex(bytes);
+    }
+
+    // Weak fallback for very old browsers
+    return `${Date.now().toString(16)}${Math.random().toString(16).slice(2)}`;
+}
+
+async function hashToHexSha256(input) {
+    const hasSubtle = window.crypto
+        && window.crypto.subtle
+        && typeof window.crypto.subtle.digest === 'function';
+
+    if (!hasSubtle) {
+        return null;
+    }
+
+    const encoder = new TextEncoder();
+    const data = encoder.encode(input);
+    const hashBuffer = await window.crypto.subtle.digest('SHA-256', data);
+    return bytesToHex(new Uint8Array(hashBuffer));
+}
+
+async function generateGuestToken(index) {
+    try {
+        const entry = draft[activeFileKey].entries[index];
+        const input = (entry.phrase || '') + (entry.pronoun_for_title || '') + (entry.guest_name || '') + Date.now().toString();
+
+        // Get all existing tokens except current entry
+        const existingTokens = new Set(
+            draft[activeFileKey].entries
+                .filter((_, i) => i !== index)
+                .map(e => e.token)
+                .filter(Boolean)
+        );
+
+        let candidate = null;
+        const fullHash = await hashToHexSha256(input);
+
+        if (fullHash) {
+            candidate = fullHash.substring(0, 32);
+            if (existingTokens.has(candidate)) {
+                candidate = fullHash.substring(0, 64);
+            }
+        }
+
+        if (!candidate || existingTokens.has(candidate)) {
+            do {
+                candidate = getRandomHexToken(16);
+            } while (existingTokens.has(candidate));
+        }
+
+        entry.token = candidate;
+
+        // Also auto-derive invitation_title
+        entry.invitation_title = buildInvitationTitleClient(entry);
+
+        setGuestLinksSelectedIndex(index, draft[activeFileKey].entries);
+        renderEditor();
+        updateDirtyStatus();
+        setStatus('Generated token successfully');
+        setTimeout(() => setStatus('Ready'), 1500);
+    } catch (err) {
+        setStatus(`Generate token failed: ${err.message}`, true);
+    }
+}
+
+/* ===================== STORY LAYOUT EDITOR ===================== */
+
+function renderStoryLayoutEditor(data) {
+    // Split into Header section (tree-style) and Blocks section (table)
+    const headerFields = ['version', 'story_layout'];
+    const headerData = {};
+    headerFields.forEach(key => {
+        if (data.hasOwnProperty(key)) {
+            headerData[key] = data[key];
+        }
+    });
+    
+    // Extract blocks array
+    const blocks = data.story_layout?.blocks || [];
+    
+    let html = `
+        <div class="story-layout-editor">
+            <!-- Header Section: Tree-style editor -->
+            <div class="story-header-section">
+                <h3 class="section-title">📋 Header Configuration</h3>
+                <div class="tree-editor">
+                    <div class="tree-root">
+                        ${renderStoryHeaderTree(data)}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Blocks Section: Table editor -->
+            <div class="story-blocks-section">
+                <h3 class="section-title">🧱 Blocks (${blocks.length})</h3>
+                ${renderBlocksTable(blocks)}
+            </div>
+        </div>
+    `;
+    
+    editorContainer.innerHTML = html;
+}
+
+function renderStoryHeaderTree(data) {
+    // Render version and story_layout (excluding blocks) as tree
+    let html = '';
+    
+    // Version field
+    html += `
+        <div class="tree-node">
+            <div class="tree-header">
+                <span class="tree-toggle"></span>
+                <span class="tree-key">version</span>
+                <span class="tree-colon">:</span>
+                <span class="tree-value number">
+                    <input type="number" value="${data.version || 1}" onchange="updateStoryHeader('version', parseInt(this.value))">
+                </span>
+            </div>
+        </div>
+    `;
+    
+    // story_layout fields (excluding blocks)
+    if (data.story_layout) {
+        const sl = data.story_layout;
+        
+        // title
+        html += `
+            <div class="tree-node">
+                <div class="tree-header">
+                    <span class="tree-toggle"></span>
+                    <span class="tree-key">story_layout.title</span>
+                    <span class="tree-colon">:</span>
+                    <span class="tree-value string">
+                        <input type="text" value="${escapeHtml(sl.title || '')}" onchange="updateStoryHeader('story_layout.title', this.value)">
+                    </span>
+                </div>
+            </div>
+        `;
+        
+        // grid object
+        if (sl.grid) {
+            html += `
+                <div class="tree-node">
+                    <div class="tree-header">
+                        <span class="tree-toggle" onclick="toggleTreeNode(this)">▼</span>
+                        <span class="tree-key">story_layout.grid</span>
+                        <span class="tree-type-badge">object</span>
+                    </div>
+                    <div class="tree-children">
+                        ${renderObjectAsTreeNodes(sl.grid, 'story_layout.grid')}
+                    </div>
+                </div>
+            `;
+        }
+        
+        // animation object
+        if (sl.animation) {
+            html += `
+                <div class="tree-node">
+                    <div class="tree-header">
+                        <span class="tree-toggle" onclick="toggleTreeNode(this)">▼</span>
+                        <span class="tree-key">story_layout.animation</span>
+                        <span class="tree-type-badge">object</span>
+                    </div>
+                    <div class="tree-children">
+                        ${renderObjectAsTreeNodes(sl.animation, 'story_layout.animation')}
+                    </div>
+                </div>
+            `;
+        }
+    }
+    
+    return html;
+}
+
+function renderObjectAsTreeNodes(obj, path) {
+    const keys = Object.keys(obj);
+    return keys.map(key => {
+        const value = obj[key];
+        const valueType = typeof value;
+        const childPath = `${path}.${key}`;
+        
+        if (valueType === 'object' && value !== null && !Array.isArray(value)) {
+            return `
+                <div class="tree-node">
+                    <div class="tree-header">
+                        <span class="tree-toggle" onclick="toggleTreeNode(this)">▼</span>
+                        <span class="tree-key">${escapeHtml(key)}</span>
+                        <span class="tree-type-badge">object</span>
+                    </div>
+                    <div class="tree-children">
+                        ${renderObjectAsTreeNodes(value, childPath)}
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Primitive value
+        return `
+            <div class="tree-node">
+                <div class="tree-header">
+                    <span class="tree-toggle"></span>
+                    <span class="tree-key">${escapeHtml(key)}</span>
+                    <span class="tree-colon">:</span>
+                    ${renderTreeValueInput(value, childPath)}
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function renderBlocksTable(blocks) {
+    if (blocks.length === 0) {
+        return `<p class="loading">No blocks. <button class="btn btn-add-row" onclick="addStoryBlock()">+ Add Block</button></p>`;
+    }
+    
+    const columns = ['id', 'col_span', 'row_span', 'col_start', 'row_start', 'item', 'effect'];
+    
+    let html = `
+        <table class="table-editor blocks-table">
+            <thead>
+                <tr>
+                    ${columns.map(col => `<th>${escapeHtml(col)}</th>`).join('')}
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+    
+    blocks.forEach((block, index) => {
+        html += `<tr>`;
+        columns.forEach(col => {
+            const value = block[col];
+            html += `<td>${renderBlockCell(col, value, index)}</td>`;
+        });
+        html += `
+            <td class="table-editor-actions">
+                <button class="btn btn-delete-row" onclick="deleteStoryBlock(${index})">🗑️</button>
+            </td>
+        </tr>`;
+    });
+    
+    html += `
+            </tbody>
+        </table>
+        <button class="btn btn-add-row" onclick="addStoryBlock()">+ Add Block</button>
+    `;
+    
+    return html;
+}
+
+function renderBlockCell(col, value, blockIndex) {
+    // Primitive columns
+    if (col === 'id') {
+        return `<input type="text" value="${escapeHtml(String(value || ''))}" onchange="updateStoryBlock(${blockIndex}, 'id', this.value)">`;
+    }
+    
+    if (col === 'col_span' || col === 'row_span' || col === 'col_start' || col === 'row_start') {
+        return `<input type="number" value="${value || 1}" onchange="updateStoryBlock(${blockIndex}, '${col}', parseInt(this.value))">`;
+    }
+    
+    // Object columns (item, effect) - render as nested tree-style editor
+    if (col === 'item' || col === 'effect') {
+        return renderNestedObjectCell(col, value, blockIndex);
+    }
+    
+    return `<input type="text" value="${escapeHtml(String(value || ''))}" onchange="updateStoryBlock(${blockIndex}, '${col}', this.value)">`;
+}
+
+function renderNestedObjectCell(col, obj, blockIndex) {
+    if (!obj || typeof obj !== 'object') {
+        obj = {};
+    }
+    
+    const pathPrefix = `story_layout.blocks[${blockIndex}].${col}`;
+    
+    // Render as collapsible mini-tree
+    const keys = Object.keys(obj);
+    
+    if (keys.length === 0) {
+        return `
+            <div class="nested-object-cell empty">
+                <button class="btn btn-add-row btn-small" onclick="addNestedKey('${pathPrefix}')">+ Add Key</button>
+            </div>
+        `;
+    }
+    
+    let html = `
+        <div class="nested-object-cell">
+            <div class="nested-object-header" onclick="toggleNestedObject(this)">
+                <span class="tree-toggle">▼</span>
+                <span class="tree-type-badge">${keys.length} keys</span>
+            </div>
+            <div class="nested-object-content">
+    `;
+    
+    keys.forEach(key => {
+        const value = obj[key];
+        const valueType = typeof value;
+        const childPath = `${pathPrefix}.${key}`;
+        
+        if (valueType === 'object' && value !== null && !Array.isArray(value)) {
+            // Nested object
+            const nestedKeys = Object.keys(value);
+            html += `
+                <div class="tree-node nested">
+                    <div class="tree-header">
+                        <span class="tree-toggle" onclick="toggleTreeNode(this)">▼</span>
+                        <span class="tree-key">${escapeHtml(key)}</span>
+                        <span class="tree-type-badge">object</span>
+                        <div class="tree-actions">
+                            <button onclick="deleteNestedKey('${pathPrefix}', '${escapeHtml(key)}')">🗑️</button>
+                        </div>
+                    </div>
+                    <div class="tree-children">
+                        ${renderNestedObjectFields(value, childPath)}
+                    </div>
+                </div>
+            `;
+        } else {
+            // Primitive
+            html += `
+                <div class="tree-node nested">
+                    <div class="tree-header">
+                        <span class="tree-toggle"></span>
+                        <span class="tree-key">${escapeHtml(key)}</span>
+                        <span class="tree-colon">:</span>
+                        ${renderTreeValueInput(value, childPath, key)}
+                        <div class="tree-actions">
+                            <button onclick="deleteNestedKey('${pathPrefix}', '${escapeHtml(key)}')">🗑️</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    });
+    
+    html += `
+                <button class="btn btn-add-row btn-small" onclick="addNestedKey('${pathPrefix}')">+ Add Key</button>
+            </div>
+        </div>
+    `;
+    
+    return html;
+}
+
+function renderNestedObjectFields(obj, path) {
+    const keys = Object.keys(obj);
+    return keys.map(key => {
+        const value = obj[key];
+        const childPath = `${path}.${key}`;
+        const valueType = typeof value;
+        
+        if (valueType === 'object' && value !== null && !Array.isArray(value)) {
+            return `
+                <div class="tree-node nested">
+                    <div class="tree-header">
+                        <span class="tree-toggle" onclick="toggleTreeNode(this)">▼</span>
+                        <span class="tree-key">${escapeHtml(key)}</span>
+                        <span class="tree-type-badge">object</span>
+                        <div class="tree-actions">
+                            <button onclick="deleteNestedKey('${path}', '${escapeHtml(key)}')">🗑️</button>
+                        </div>
+                    </div>
+                    <div class="tree-children">
+                        ${renderNestedObjectFields(value, childPath)}
+                    </div>
+                </div>
+            `;
+        }
+        
+        return `
+            <div class="tree-node nested">
+                <div class="tree-header">
+                    <span class="tree-toggle"></span>
+                    <span class="tree-key">${escapeHtml(key)}</span>
+                    <span class="tree-colon">:</span>
+                    ${renderTreeValueInput(value, childPath, key)}
+                    <div class="tree-actions">
+                        <button onclick="deleteNestedKey('${path}', '${escapeHtml(key)}')">🗑️</button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function toggleNestedObject(element) {
+    const cell = element.closest('.nested-object-cell');
+    cell.classList.toggle('collapsed');
+    const toggle = element.querySelector('.tree-toggle');
+    toggle.textContent = cell.classList.contains('collapsed') ? '▶' : '▼';
+}
+
+/* ===================== STORY LAYOUT ACTIONS ===================== */
+
+function updateStoryHeader(path, value) {
+    const obj = draft[activeFileKey];
+    setNestedValue(obj, path, value);
+    updateDirtyStatus();
+}
+
+function updateStoryBlock(blockIndex, key, value) {
+    const blocks = draft[activeFileKey].story_layout.blocks;
+    if (blocks && blocks[blockIndex]) {
+        blocks[blockIndex][key] = value;
+        updateDirtyStatus();
+    }
+}
+
+function addStoryBlock() {
+    const blocks = draft[activeFileKey].story_layout.blocks;
+    if (!blocks) {
+        draft[activeFileKey].story_layout.blocks = [];
+    }
+    
+    // Create template block
+    const template = {
+        id: `block-${Date.now()}`,
+        col_span: 1,
+        row_span: 1,
+        col_start: 1,
+        row_start: 1,
+        item: { type: 'text', text: '' },
+        effect: { fade_in: true }
+    };
+    
+    draft[activeFileKey].story_layout.blocks.push(template);
+    renderEditor();
+    updateDirtyStatus();
+}
+
+function deleteStoryBlock(index) {
+    const blocks = draft[activeFileKey].story_layout.blocks;
+    if (blocks) {
+        blocks.splice(index, 1);
+        renderEditor();
+        updateDirtyStatus();
+    }
+}
+
+function addNestedKey(path) {
+    const key = prompt('Enter new key name:');
+    if (!key) return;
+    
+    const obj = draft[activeFileKey];
+    const target = getNestedValue(obj, path);
+    
+    if (typeof target === 'object' && target !== null) {
+        target[key] = '';
+        renderEditor();
+        updateDirtyStatus();
+    }
+}
+
+function deleteNestedKey(path, key) {
+    const obj = draft[activeFileKey];
+    const target = getNestedValue(obj, path);
+    
+    if (typeof target === 'object' && target !== null) {
+        delete target[key];
+        renderEditor();
+        updateDirtyStatus();
+    }
+}
+
+/* ===================== TABLE EDITOR ===================== */
+
+function renderTableEditor(data, file) {
+    const isArray = Array.isArray(data);
+    
+    if (isArray) {
+        renderArrayTable(data, file);
+    } else {
+        renderObjectTable(data, file);
+    }
+}
+
+function renderArrayTable(data, file) {
+    if (data.length === 0) {
+        editorContainer.innerHTML = `
+            <p class="loading">No items. <button class="btn btn-add-row" onclick="addArrayItem()">+ Add Item</button></p>
+        `;
+        return;
+    }
+    
+    // Get all unique keys from all items
+    const allKeys = [...new Set(data.flatMap(item => Object.keys(item)))];
+    
+    let html = `
+        <table class="table-editor">
+            <thead>
+                <tr>
+                    ${allKeys.map(key => `<th>${escapeHtml(key)}</th>`).join('')}
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+    
+    data.forEach((item, index) => {
+        html += `<tr>`;
+        allKeys.forEach(key => {
+            const value = item[key];
+            html += `<td>${renderTableCell(key, value, index)}</td>`;
+        });
+        html += `
+            <td class="table-editor-actions">
+                <button class="btn btn-delete-row" onclick="deleteArrayItem(${index})">🗑️</button>
+            </td>
+        </tr>`;
+    });
+    
+    html += `
+            </tbody>
+        </table>
+        <button class="btn btn-add-row" onclick="addArrayItem()">+ Add Item</button>
+    `;
+    
+    editorContainer.innerHTML = html;
+}
+
+function renderObjectTable(data, file) {
+    const keys = Object.keys(data);
+    
+    if (keys.length === 0) {
+        editorContainer.innerHTML = `<p class="loading">Empty object</p>`;
+        return;
+    }
+    
+    // Check if this is a nested object (like guest-links with entries array)
+    if (data.entries && Array.isArray(data.entries)) {
+        renderNestedObjectWithEntries(data, file);
+        return;
+    }
+    
+    // Simple key-value table
+    let html = `
+        <table class="table-editor">
+            <thead>
+                <tr>
+                    <th>Key</th>
+                    <th>Value</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+    
+    keys.forEach(key => {
+        const value = data[key];
+        const type = typeof value;
+        
+        if (type === 'object' && value !== null) {
+            // Nested object - show as JSON string (editable)
+            html += `
+                <tr>
+                    <td>${escapeHtml(key)}</td>
+                    <td>
+                        <textarea 
+                            rows="3" 
+                            onchange="updateObjectKey('${escapeHtml(key)}', this.value, true)"
+                        >${JSON.stringify(value, null, 2)}</textarea>
+                    </td>
+                </tr>
+            `;
+        } else {
+            html += `
+                <tr>
+                    <td>${escapeHtml(key)}</td>
+                    <td>${renderObjectValueInput(key, value)}</td>
+                </tr>
+            `;
+        }
+    });
+    
+    html += `</tbody></table>`;
+    editorContainer.innerHTML = html;
+}
+
+function renderNestedObjectWithEntries(data, file) {
+    // For files like guest-links.json that have metadata + entries array
+    const metaKeys = Object.keys(data).filter(k => k !== 'entries');
+    
+    let html = `<div style="margin-bottom: 1rem;">`;
+    
+    // Metadata section
+    if (metaKeys.length > 0) {
+        html += `<h4 style="margin-bottom: 0.5rem;">Metadata</h4>`;
+        html += `<table class="table-editor"><tbody>`;
+        metaKeys.forEach(key => {
+            html += `
+                <tr>
+                    <td>${escapeHtml(key)}</td>
+                    <td>${renderObjectValueInput(key, data[key])}</td>
+                </tr>
+            `;
+        });
+        html += `</tbody></table>`;
+    }
+    
+    // Entries section
+    html += `<h4 style="margin: 1rem 0 0.5rem;">Entries (${data.entries.length})</h4>`;
+    
+    if (data.entries.length === 0) {
+        html += `<p class="loading">No entries. <button class="btn btn-add-row" onclick="addEntryItem()">+ Add Entry</button></p>`;
+    } else {
+        const entryKeys = [...new Set(data.entries.flatMap(e => Object.keys(e)))];
+        
+        html += `
+            <table class="table-editor">
+                <thead>
+                    <tr>
+                        ${entryKeys.map(k => `<th>${escapeHtml(k)}</th>`).join('')}
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+        
+        data.entries.forEach((entry, index) => {
+            html += `<tr>`;
+            entryKeys.forEach(key => {
+                html += `<td>${renderTableCell(key, entry[key], index, 'entries')}</td>`;
+            });
+            html += `
+                <td class="table-editor-actions">
+                    <button class="btn btn-delete-row" onclick="deleteEntryItem(${index})">🗑️</button>
+                </td>
+            </tr>`;
+        });
+        
+        html += `
+                </tbody>
+            </table>
+            <button class="btn btn-add-row" onclick="addEntryItem()">+ Add Entry</button>
+        `;
+    }
+    
+    html += `</div>`;
+    editorContainer.innerHTML = html;
+}
+
+function renderTableCell(key, value, index, parentPath = null) {
+    const type = typeof value;
+    const path = parentPath ? `${parentPath}[${index}].${key}` : `[${index}].${key}`;
+    
+    if (value === null || value === undefined) {
+        return `<input type="text" value="" placeholder="null" onchange="updateArrayItem(${index}, '${escapeHtml(key)}', this.value, ${parentPath ? `'${parentPath}'` : 'null'})">`;
+    }
+    
+    if (type === 'boolean') {
+        return `
+            <select onchange="updateArrayItem(${index}, '${escapeHtml(key)}', this.value === 'true', ${parentPath ? `'${parentPath}'` : 'null'})">
+                <option value="true" ${value ? 'selected' : ''}>true</option>
+                <option value="false" ${!value ? 'selected' : ''}>false</option>
+            </select>
+        `;
+    }
+    
+    if (type === 'number') {
+        return `<input type="number" value="${value}" onchange="updateArrayItem(${index}, '${escapeHtml(key)}', parseFloat(this.value), ${parentPath ? `'${parentPath}'` : 'null'})">`;
+    }
+    
+    return `<input type="text" value="${escapeHtml(String(value))}" onchange="updateArrayItem(${index}, '${escapeHtml(key)}', this.value, ${parentPath ? `'${parentPath}'` : 'null'})">`;
+}
+
+function renderObjectValueInput(key, value) {
+    const type = typeof value;
+    
+    if (type === 'boolean') {
+        return `
+            <select onchange="updateObjectKey('${escapeHtml(key)}', this.value === 'true')">
+                <option value="true" ${value ? 'selected' : ''}>true</option>
+                <option value="false" ${!value ? 'selected' : ''}>false</option>
+            </select>
+        `;
+    }
+    
+    if (type === 'number') {
+        return `<input type="number" value="${value}" onchange="updateObjectKey('${escapeHtml(key)}', parseFloat(this.value))">`;
+    }
+    
+    return `<input type="text" value="${escapeHtml(String(value))}" onchange="updateObjectKey('${escapeHtml(key)}', this.value)">`;
+}
+
+/* ===================== TABLE EDITOR ACTIONS ===================== */
+
+function updateArrayItem(index, key, value, parentPath = null) {
+    if (parentPath === 'entries') {
+        draft[activeFileKey].entries[index][key] = value;
+    } else {
+        draft[activeFileKey][index][key] = value;
+    }
+    updateDirtyStatus();
+}
+
+function updateObjectKey(key, value, isJson = false) {
+    if (isJson) {
+        try {
+            draft[activeFileKey][key] = JSON.parse(value);
+        } catch (e) {
+            // Invalid JSON, keep as string
+            draft[activeFileKey][key] = value;
+        }
+    } else {
+        draft[activeFileKey][key] = value;
+    }
+    updateDirtyStatus();
+}
+
+function addArrayItem() {
+    const data = draft[activeFileKey];
+    if (!Array.isArray(data)) return;
+    
+    // Create new item based on existing structure
+    const template = data.length > 0 ? { ...data[0] } : {};
+    Object.keys(template).forEach(key => {
+        const type = typeof template[key];
+        if (type === 'string') template[key] = '';
+        else if (type === 'number') template[key] = 0;
+        else if (type === 'boolean') template[key] = false;
+        else template[key] = null;
+    });
+    
+    // Add id if exists
+    if ('id' in template) {
+        template.id = Date.now();
+    }
+    if ('createdAt' in template) {
+        template.createdAt = new Date().toISOString();
+    }
+    
+    draft[activeFileKey].push(template);
+    renderEditor();
+    updateDirtyStatus();
+}
+
+function deleteArrayItem(index) {
+    draft[activeFileKey].splice(index, 1);
+    renderEditor();
+    updateDirtyStatus();
+}
+
+function addEntryItem() {
+    const entries = draft[activeFileKey].entries;
+    if (!Array.isArray(entries)) return;
+    
+    // Create template from existing entry
+    const template = entries.length > 0 ? { ...entries[0] } : {};
+    Object.keys(template).forEach(key => {
+        const type = typeof template[key];
+        if (type === 'string') template[key] = '';
+        else if (type === 'number') template[key] = 0;
+        else if (type === 'boolean') template[key] = false;
+        else template[key] = null;
+    });
+    
+    if ('created_at' in template) {
+        template.created_at = new Date().toISOString();
+    }
+    if ('updated_at' in template) {
+        template.updated_at = new Date().toISOString();
+    }
+    
+    draft[activeFileKey].entries.push(template);
+    renderEditor();
+    updateDirtyStatus();
+}
+
+function deleteEntryItem(index) {
+    draft[activeFileKey].entries.splice(index, 1);
+    renderEditor();
+    updateDirtyStatus();
+}
+
+/* ===================== TREE EDITOR ===================== */
+
+function renderTreeEditor(data) {
+    editorContainer.innerHTML = `
+        <div class="tree-breadcrumb">
+            <strong>Path:</strong> <span id="treePath">/</span>
+        </div>
+        <div class="tree-editor">
+            <div class="tree-root" id="treeRoot">
+                ${renderTreeNode(data, '', 0)}
+            </div>
+        </div>
+    `;
+}
+
+function renderTreeNode(node, path, depth) {
+    if (node === null || node === undefined) {
+        return `<span class="tree-value null">null</span>`;
+    }
+    
+    const type = Array.isArray(node) ? 'array' : typeof node;
+    
+    if (type === 'array') {
+        if (node.length === 0) {
+            return `<span class="tree-value array">[]</span>`;
+        }
+        
+        const children = node.map((item, index) => `
+            <div class="tree-node">
+                <div class="tree-header">
+                    <span class="tree-toggle" onclick="toggleTreeNode(this)">▼</span>
+                    <span class="tree-key">[${index}]</span>
+                    <span class="tree-type-badge">${Array.isArray(item) ? 'array' : typeof item}</span>
+                    <div class="tree-actions">
+                        <button onclick="deleteArrayNode('${path}', ${index})">🗑️</button>
+                    </div>
+                </div>
+                <div class="tree-children">
+                    ${renderTreeNode(item, `${path}[${index}]`, depth + 1)}
+                </div>
+            </div>
+        `).join('');
+        
+        return `
+            <div class="tree-children">
+                ${children}
+                <button class="btn btn-add-row" style="margin-top: 0.25rem;" onclick="addArrayNode('${path}')">+ Add Item</button>
+            </div>
+        `;
+    }
+    
+    if (type === 'object') {
+        const keys = Object.keys(node);
+        if (keys.length === 0) {
+            return `<span class="tree-value object">{}</span>`;
+        }
+        
+        const children = keys.map(key => {
+            const value = node[key];
+            const valueType = Array.isArray(value) ? 'array' : typeof value;
+            const isExpandable = valueType === 'object' || valueType === 'array';
+            const childPath = path ? `${path}.${key}` : key;
+            
+            return `
+                <div class="tree-node">
+                    <div class="tree-header">
+                        ${isExpandable ? `<span class="tree-toggle" onclick="toggleTreeNode(this)">▼</span>` : '<span class="tree-toggle"></span>'}
+                        <span class="tree-key">${escapeHtml(key)}</span>
+                        <span class="tree-colon">:</span>
+                        ${isExpandable ? `<span class="tree-type-badge">${valueType}</span>` : renderTreeValueInput(value, childPath, key)}
+                        <div class="tree-actions">
+                            <button onclick="deleteObjectKey('${path}', '${escapeHtml(key)}')">🗑️</button>
+                        </div>
+                    </div>
+                    <div class="tree-children">
+                        ${isExpandable ? renderTreeNode(value, childPath, depth + 1) : ''}
+                    </div>
+                </div>
+            `;
+        }).join('');
+        
+        return `
+            <div class="tree-children">
+                ${children}
+                <button class="btn btn-add-row" style="margin-top: 0.25rem;" onclick="addObjectKey('${path}')">+ Add Key</button>
+            </div>
+        `;
+    }
+    
+    // Primitive value
+    return renderTreeValueInput(node, path);
+}
+
+function renderTreeValueInput(value, path, keyName = null) {
+    const type = typeof value;
+    const isSrcField = keyName === 'src' || (path && path.endsWith('.src'));
+    
+    if (type === 'boolean') {
+        return `
+            <span class="tree-value boolean">
+                <select onchange="updateTreeValue('${path}', this.value === 'true')">
+                    <option value="true" ${value ? 'selected' : ''}>true</option>
+                    <option value="false" ${!value ? 'selected' : ''}>false</option>
+                </select>
+            </span>
+        `;
+    }
+    
+    if (type === 'number') {
+        return `
+            <span class="tree-value number">
+                <input type="number" value="${value}" onchange="updateTreeValue('${path}', parseFloat(this.value))">
+            </span>
+        `;
+    }
+    
+    // String value - add picker button for 'src' fields
+    if (isSrcField) {
+        return `
+            <span class="tree-value string">
+                <div class="src-input-group">
+                    <input type="text" value="${escapeHtml(String(value))}" onchange="updateTreeValue('${path}', this.value)" placeholder="/assets/path/to/file">
+                    <button class="btn btn-browse" onclick="openTreeAssetPicker('${path}')" title="Browse assets">📁</button>
+                </div>
+            </span>
+        `;
+    }
+    
+    return `
+        <span class="tree-value string">
+            <input type="text" value="${escapeHtml(String(value))}" onchange="updateTreeValue('${path}', this.value)">
+        </span>
+    `;
+}
+
+function toggleTreeNode(element) {
+    const node = element.closest('.tree-node');
+    node.classList.toggle('collapsed');
+    element.textContent = node.classList.contains('collapsed') ? '▶' : '▼';
+}
+
+function updateTreeValue(path, value) {
+    const obj = draft[activeFileKey];
+    setNestedValue(obj, path, value);
+    updateDirtyStatus();
+}
+
+function addArrayNode(path) {
+    const obj = draft[activeFileKey];
+    const target = path ? getNestedValue(obj, path) : obj;
+    
+    if (Array.isArray(target)) {
+        // Add empty item based on array type
+        if (target.length > 0 && typeof target[0] === 'object') {
+            target.push({});
+        } else if (target.length > 0 && typeof target[0] === 'string') {
+            target.push('');
+        } else if (target.length > 0 && typeof target[0] === 'number') {
+            target.push(0);
+        } else {
+            target.push(null);
+        }
+    }
+    
+    renderEditor();
+    updateDirtyStatus();
+}
+
+function deleteArrayNode(path, index) {
+    const obj = draft[activeFileKey];
+    const target = path ? getNestedValue(obj, path) : obj;
+    
+    if (Array.isArray(target)) {
+        target.splice(index, 1);
+    }
+    
+    renderEditor();
+    updateDirtyStatus();
+}
+
+function addObjectKey(path) {
+    const key = prompt('Enter new key name:');
+    if (!key) return;
+    
+    const obj = draft[activeFileKey];
+    const target = path ? getNestedValue(obj, path) : obj;
+    
+    if (typeof target === 'object' && target !== null) {
+        target[key] = '';
+    }
+    
+    renderEditor();
+    updateDirtyStatus();
+}
+
+function deleteObjectKey(path, key) {
+    const obj = draft[activeFileKey];
+    const target = path ? getNestedValue(obj, path) : obj;
+    
+    if (typeof target === 'object' && target !== null) {
+        delete target[key];
+    }
+    
+    renderEditor();
+    updateDirtyStatus();
+}
+
+/* ===================== UTILITIES ===================== */
+
+function deepClone(obj) {
+    return JSON.parse(JSON.stringify(obj));
+}
+
+function deepEqual(a, b) {
+    return JSON.stringify(a) === JSON.stringify(b);
+}
+
+function escapeHtml(str) {
+    if (typeof str !== 'string') return str;
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function toSafePreviewUrl(assetWebPath) {
+    if (typeof assetWebPath !== 'string' || !assetWebPath.startsWith('/assets/')) {
+        return '';
+    }
+
+    return `${API_BASE}/assets/preview?path=${encodeURIComponent(assetWebPath)}`;
+}
+
+function getNestedValue(obj, path) {
+    const parts = path.replace(/\[(\d+)\]/g, '.$1').split('.');
+    let current = obj;
+    
+    for (const part of parts) {
+        if (current === null || current === undefined) return undefined;
+        current = current[part];
+    }
+    
+    return current;
+}
+
+function setNestedValue(obj, path, value) {
+    const parts = path.replace(/\[(\d+)\]/g, '.$1').split('.');
+    let current = obj;
+    
+    for (let i = 0; i < parts.length - 1; i++) {
+        const part = parts[i];
+        if (!(part in current)) {
+            current[part] = {};
+        }
+        current = current[part];
+    }
+    
+    current[parts[parts.length - 1]] = value;
+}
+
+function setStatus(message, isError = false) {
+    statusIndicator.textContent = message;
+    statusIndicator.style.color = isError ? 'var(--danger)' : 'var(--text-muted)';
+}
+
+/* ===================== START ===================== */
+
+// Auth-aware startup
+document.addEventListener('DOMContentLoaded', async function startup() {
+    const authed = await checkAuthStatus();
+    if (authed) {
+        hideLoginOverlay();
+        init();
+    } else {
+        showLoginOverlay();
+    }
+});

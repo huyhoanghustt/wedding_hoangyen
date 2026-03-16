@@ -1,0 +1,31 @@
+/* ===========================
+   SECTION 2: INVITATION TEXT
+   =========================== */
+#invitation {
+  background: var(--maroon);
+  color: white;
+  text-align: center;
+  padding: 0.32rem 0.22rem;
+}
+
+.invitation-script {
+  font-family: var(--font-script);
+  font-size: 0.288rem;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 0.16rem;
+}
+
+.invitation-body {
+  font-size: 0.13rem;
+  line-height: 1.9;
+  color: rgba(255, 255, 255, 0.85);
+  font-style: italic;
+}
+
+.invitation-divider {
+  width: 0.096rem;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.4);
+  margin: 0.18rem auto;
+}
+

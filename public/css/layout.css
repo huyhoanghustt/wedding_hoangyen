@@ -1,0 +1,218 @@
+/* ===========================
+   MAIN APP CONTAINER
+   =========================== */
+#app {
+  width: 100%;
+  max-width: 5rem;
+  min-height: 100vh;
+  background: var(--cream-light);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 0 0.4rem rgba(0, 0, 0, 0.2);
+  margin: 0 auto;
+  padding-bottom: var(--toolbar-safe-space);
+}
+
+/* ===========================
+   SECTIONS - SHARED
+   =========================== */
+.section {
+  padding: 0.48rem 0.2rem;
+  position: relative;
+}
+
+.section-title {
+  font-family: var(--font-script);
+  font-size: 0.32rem;
+  color: var(--maroon);
+  text-align: center;
+  margin-bottom: 0.08rem;
+  line-height: 1.2;
+}
+
+.section-subtitle {
+  font-size: 0.13rem;
+  color: var(--text-muted);
+  text-align: center;
+  letter-spacing: 0.02rem;
+  text-transform: uppercase;
+  margin-bottom: 0.28rem;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 0.1rem;
+  margin: 0.2rem auto;
+  max-width: 0.32rem;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--maroon), transparent);
+}
+
+.divider-heart {
+  color: var(--maroon);
+  font-size: 0.14rem;
+}
+
+/* ===========================
+   SCROLL ANIMATIONS
+   =========================== */
+.reveal {
+  opacity: 0;
+  transform: translateY(0.3rem);
+  transition: opacity calc(0.6s * var(--animation-speed-factor, 1)) ease,
+              transform calc(0.6s * var(--animation-speed-factor, 1)) ease;
+}
+
+.reveal.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reveal-delay-1 {
+  transition-delay: calc(0.1s * var(--animation-speed-factor, 1));
+}
+
+.reveal-delay-2 {
+  transition-delay: calc(0.2s * var(--animation-speed-factor, 1));
+}
+
+.reveal-delay-3 {
+  transition-delay: calc(0.3s * var(--animation-speed-factor, 1));
+}
+
+/* #hero: height determined by the img inside it */
+#hero {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+
+/* Actual photo img — width% set via JS from wedding.json */
+.hero-bg-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  position: relative;
+  z-index: 0;
+}
+
+/* Gradient overlay for text readability */
+#hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom,
+      rgba(0, 0, 0, 0.15) 0%,
+      rgba(0, 0, 0, 0.05) 40%,
+      rgba(0, 0, 0, 0.45) 80%,
+      rgba(0, 0, 0, 0.65) 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Top overlay: couple names — position set from wedding.json */
+.hero-name-overlay {
+  position: absolute;
+  z-index: 2;
+  text-shadow: 0 0.02rem 0.12rem rgba(0, 0, 0, 0.5);
+  /* default fallback (overridden by JS from config) */
+  top: 0.2rem;
+  right: 0.16rem;
+  text-align: right;
+}
+
+.hero-name-top,
+.hero-name-bottom {
+  font-family: var(--font-script);
+  font-size: 0.32rem;
+  color: white;
+  line-height: 1;
+  display: block;
+}
+
+.hero-name-amp {
+  font-family: var(--font-script);
+  font-size: 0.416rem;
+  color: var(--gold);
+  display: block;
+  line-height: 0.9;
+  text-shadow: 0 0.02rem 0.12rem rgba(0, 0, 0, 0.5);
+}
+
+/* Bottom overlay: invitation text — position set from wedding.json */
+.hero-bottom-overlay {
+  position: absolute;
+  z-index: 2;
+  text-shadow: 0 0.02rem 0.08rem rgba(0, 0, 0, 0.6);
+  /* default fallback (overridden by JS from config) */
+  bottom: 0.128rem;
+  right: 0.16rem;
+  text-align: right;
+}
+
+.hero-overlay-label {
+  font-size: 0.11rem;
+  color: rgba(255, 255, 255, 0.85);
+  letter-spacing: 0.025rem;
+  text-transform: uppercase;
+  margin-bottom: 0.06rem;
+}
+
+.hero-overlay-divider {
+  width: 0.08rem;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.5);
+  margin: 0.06rem 0 0.06rem auto;
+}
+
+.hero-overlay-event {
+  font-family: var(--font-script);
+  font-size: 0.272rem;
+  color: white;
+  margin-bottom: 0.02rem;
+}
+
+.hero-overlay-date {
+  font-size: 0.12rem;
+  color: rgba(255, 255, 255, 0.8);
+  letter-spacing: 0.02rem;
+}
+
+/* Bottom center: scroll hint */
+#hero .hero-scroll-hint {
+  position: absolute;
+  bottom: 0.24rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: rgba(255, 255, 255, 0.7);
+  animation: bounce 2s ease-in-out infinite;
+}
+
+#hero .hero-scroll-hint svg {
+  width: 0.22rem;
+  height: 0.22rem;
+}
+
+@keyframes bounce {
+
+  0%,
+  100% {
+    transform: translateX(-50%) translateY(0);
+  }
+
+  50% {
+    transform: translateX(-50%) translateY(-0.06rem);
+  }
+}
+

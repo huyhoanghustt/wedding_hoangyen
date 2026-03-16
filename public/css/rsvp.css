@@ -1,0 +1,164 @@
+/* ===========================
+   SECTION 7: RSVP
+   =========================== */
+#rsvp {
+  background: var(--cream-light);
+  padding: 0.48rem 0.2rem;
+}
+
+.rsvp-form {
+  background: white;
+  border-radius: var(--radius);
+  padding: 0.24rem 0.2rem;
+  box-shadow: var(--shadow);
+  border: 1px solid rgba(97, 16, 16, 0.1);
+}
+
+.form-group {
+  margin-bottom: 0.18rem;
+}
+
+.form-label {
+  display: block;
+  font-size: 0.12rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 0.08rem;
+}
+
+.form-input {
+  width: 100%;
+  padding: 0.12rem 0.16rem;
+  border: 1.5px solid #e8ddd5;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-size: 0.14rem;
+  color: var(--text-dark);
+  background: #fafafa;
+  outline: none;
+  transition: var(--transition);
+}
+
+.form-input:focus {
+  border-color: var(--maroon);
+  background: #fff;
+  box-shadow: 0 0 0 0.03rem rgba(97, 16, 16, 0.08);
+}
+
+.form-select {
+  width: 100%;
+  padding: 0.12rem 0.16rem;
+  border: 1.5px solid #e8ddd5;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-size: 0.14rem;
+  color: var(--text-dark);
+  background: #fafafa;
+  outline: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23611010' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.14rem center;
+  padding-right: 0.4rem;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.form-select:focus {
+  border-color: var(--maroon);
+  background-color: #fff;
+}
+
+.radio-group {
+  display: flex;
+  gap: 0.1rem;
+}
+
+.radio-option {
+  flex: 1;
+}
+
+.radio-option input[type="radio"] {
+  display: none;
+}
+
+.radio-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.1rem 0.14rem;
+  border: 1.5px solid #e8ddd5;
+  border-radius: var(--radius-sm);
+  font-size: 0.13rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: var(--transition);
+  font-weight: 500;
+  text-align: center;
+  background: #fafafa;
+}
+
+.radio-option input[type="radio"]:checked+.radio-label {
+  border-color: var(--maroon);
+  background: var(--pink-light);
+  color: var(--maroon);
+  font-weight: 600;
+}
+
+.btn-submit {
+  width: 100%;
+  padding: 0.14rem;
+  background: var(--maroon);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-size: 0.14rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: var(--transition);
+  margin-top: 0.08rem;
+}
+
+.btn-submit:hover {
+  background: var(--maroon-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 0.04rem 0.16rem rgba(97, 16, 16, 0.3);
+}
+
+.btn-submit:active {
+  transform: translateY(0);
+}
+
+.rsvp-success {
+  display: none;
+  text-align: center;
+  padding: 0.24rem;
+  color: var(--maroon);
+}
+
+.rsvp-success.show {
+  display: block;
+}
+
+.rsvp-success svg {
+  width: 0.48rem;
+  height: 0.48rem;
+  margin-bottom: 0.12rem;
+}
+
+.rsvp-success h3 {
+  font-family: var(--font-script);
+  font-size: 0.288rem;
+  margin-bottom: 0.08rem;
+}
+
+.rsvp-success p {
+  font-size: 0.13rem;
+  color: var(--text-muted);
+}
+

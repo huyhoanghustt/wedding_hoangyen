@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "updated_at": "2026-02-23T00:44:56.871Z",
+  "entries": [
+    {
+      "token": "2c2f9f533f396128cef4e4d095574ee788df9863c195c8a8e731a606e3d87693",
+      "phrase": "Kính mời",
+      "pronoun_for_title": "em",
+      "guest_name": "Tú",
+      "invitation_format": "default",
+      "invitation_title": "Kính mời em Tú!",
+      "pronouns": ["em", "Em", "em", "bọn mình", "em", "gia đình", "hai đứa", "em", "chúng mình"],
+      "custom_body_enabled": false,
+      "custom_body": "",
+      "qr": {
+        "base_url": "https://tienquyen.radar.io.vn",
+        "target_url": "",
+        "image_path": "",
+        "updated_at": ""
+      },
+      "created_at": "2026-02-23T00:44:56.871Z",
+      "updated_at": "2026-02-23T00:44:56.871Z"
+    }
+  ]
+}

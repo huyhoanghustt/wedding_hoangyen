@@ -1,0 +1,249 @@
+/* ===========================
+   SECTION 4: CEREMONY
+   =========================== */
+#ceremony {
+  background: var(--cream-light);
+  padding: 0;
+}
+
+.ceremony-block {
+  padding: 0.4rem 0.2rem;
+}
+
+.ceremony-block:first-child {
+  background: #fff;
+}
+
+.ceremony-block-header {
+  background: var(--maroon);
+  color: white;
+  text-align: center;
+  padding: 0.16rem 0.2rem;
+}
+
+.ceremony-block-title {
+  font-size: 0.176rem;
+  font-weight: 700;
+  letter-spacing: 0.03rem;
+  text-transform: uppercase;
+}
+
+.ceremony-block-time {
+  font-size: 0.11rem;
+  opacity: 0.8;
+  margin-top: 0.04rem;
+  letter-spacing: 0.02rem;
+}
+
+.ceremony-location-name {
+  font-weight: 700;
+  font-size: 0.16rem;
+  color: var(--maroon);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 0.04rem;
+}
+
+.ceremony-date-display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.16rem;
+  margin: 0.18rem 0;
+}
+
+.ceremony-date-month {
+  font-size: 0.11rem;
+  color: var(--text-muted);
+  letter-spacing: 0.02rem;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.ceremony-date-num {
+  font-size: 0.48rem;
+  font-weight: 700;
+  color: var(--maroon);
+  font-family: 'Cormorant Infant', serif;
+  line-height: 1;
+}
+
+.ceremony-date-sep {
+  width: 1px;
+  height: 0.36rem;
+  background: rgba(97, 16, 16, 0.3);
+}
+
+.ceremony-lunar-date {
+  font-size: 0.11rem;
+  color: var(--text-muted);
+  text-align: center;
+  font-style: italic;
+  margin-bottom: 0.1rem;
+}
+
+.ceremony-location-text {
+  font-size: 0.12rem;
+  color: var(--text-dark);
+  text-align: center;
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 1px;
+  margin-bottom: 0.04rem;
+}
+
+.ceremony-address {
+  font-size: 0.12rem;
+  color: var(--text-muted);
+  text-align: center;
+  margin-bottom: 0.16rem;
+}
+
+/* Car road illustration */
+.ceremony-illustration {
+  position: relative;
+  width: 100%;
+  margin: 0.2rem 0;
+  padding: 0.1rem 0;
+}
+
+.road-svg-wrap {
+  position: relative;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.road-svg-wrap img,
+.road-svg {
+  width: 100%;
+  max-width: 0.544rem;
+}
+
+.house-label {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.03rem;
+  font-size: 0.11rem;
+  font-weight: 600;
+  color: var(--maroon);
+}
+
+.house-label svg {
+  width: 0.28rem;
+  height: 0.28rem;
+  color: var(--maroon);
+}
+
+.house-nha-gai {
+  top: 15%;
+  right: 5%;
+}
+
+.house-nha-trai {
+  bottom: 10%;
+  left: 5%;
+}
+
+.chi-duong-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.06rem;
+  background: var(--maroon);
+  color: white;
+  border: none;
+  border-radius: 0.24rem;
+  padding: 0.08rem 0.18rem;
+  font-size: 0.11rem;
+  font-family: var(--font-body);
+  font-weight: 600;
+  letter-spacing: 1px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: var(--transition);
+  text-transform: uppercase;
+}
+
+.chi-duong-btn:hover {
+  background: var(--maroon-dark);
+  transform: translateY(-1px);
+}
+
+.chi-duong-btn-sm {
+  padding: 0.06rem 0.12rem;
+  font-size: 0.1rem;
+  letter-spacing: 0.5px;
+}
+
+/* ceremony block body */
+.ceremony-block-body {
+  padding: 0.24rem 0.2rem;
+  background: #fff;
+}
+
+.ceremony-block:nth-child(3) .ceremony-block-body {
+  background: #fdf6ef;
+}
+
+.ceremony-map-buttons {
+  display: flex;
+  justify-content: center;
+  margin-top: 0.12rem;
+}
+
+/* ===========================
+   CEREMONY MAP SECTION
+   =========================== */
+.ceremony-map-section {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Map img — width% set via JS from wedding.json */
+.ceremony-map-img {
+  display: block;
+  width: 90%;
+  /* default, overridden by applyConfig */
+  height: auto;
+  margin: 0 auto;
+}
+
+.map-house-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.04rem;
+}
+
+.map-house-icon {
+  width: 0.44rem;
+  height: 0.44rem;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--maroon);
+  box-shadow: 0 0.02rem 0.1rem rgba(0, 0, 0, 0.15);
+  margin-bottom: 0.02rem;
+}
+
+.map-house-icon svg {
+  width: 0.22rem;
+  height: 0.22rem;
+}
+
+.map-house-name {
+  font-size: 0.12rem;
+  font-weight: 700;
+  color: var(--maroon);
+  letter-spacing: 1px;
+  background: rgba(255, 255, 255, 0.85);
+  padding: 0.02rem 0.08rem;
+  border-radius: 0.1rem;
+  text-align: center;
+}
+
+

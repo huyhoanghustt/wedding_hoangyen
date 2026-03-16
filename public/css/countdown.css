@@ -1,0 +1,46 @@
+/* ===========================
+   SECTION 3: COUNTDOWN
+   =========================== */
+#countdown {
+  background: var(--cream-light);
+  text-align: center;
+  padding: 0.48rem 0.2rem;
+}
+
+.countdown-grid {
+  display: flex;
+  justify-content: center;
+  gap: 0.16rem;
+  margin-top: 0.2rem;
+}
+
+.countdown-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: white;
+  border-radius: 0.12rem;
+  padding: 0.14rem 0.16rem;
+  min-width: 0.1024rem;
+  box-shadow: var(--shadow-sm);
+  border: 1.5px solid rgba(97, 16, 16, 0.12);
+}
+
+.countdown-num {
+  font-size: 0.32rem;
+  font-weight: 700;
+  color: var(--maroon);
+  font-family: 'Cormorant Infant', serif;
+  line-height: 1;
+  min-width: 2ch;
+  text-align: center;
+}
+
+.countdown-label {
+  font-size: 0.1rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-top: 0.04rem;
+}
+

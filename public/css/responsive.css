@@ -1,0 +1,125 @@
+@media (prefers-reduced-motion: reduce) {
+
+  .gallery-main-img-wrap,
+  .gallery-main-img-wrap.is-no-transition,
+  .gallery-thumb,
+  .gallery-lightbox,
+  .gallery-lightbox.open,
+  .gallery-lightbox-img,
+  .gallery-lightbox-close,
+  .gallery-lightbox-nav,
+  .gallery-lightbox-counter,
+  .gift-qr-lightbox,
+  .gift-qr-lightbox.open,
+  .gift-qr-lightbox-img,
+  .gift-qr-lightbox-close,
+  .gift-popup-qr-img,
+  .gift-popup-copy-btn,
+  .gift-popup-download-btn,
+  #gallery.gallery-reveal-pending #gallery-img-wrap,
+  #gallery.gallery-reveal-pending #gallery-thumbs,
+  #gallery.gallery-reveal-pending .gallery-thumb-reveal-item,
+  #gallery.gallery-revealed .gallery-thumb-reveal-item {
+    transition: none !important;
+  }
+
+  #gallery.gallery-reveal-pending #gallery-img-wrap,
+  #gallery.gallery-revealed #gallery-img-wrap,
+  #gallery.gallery-reveal-pending #gallery-thumbs,
+  #gallery.gallery-revealed #gallery-thumbs,
+  #gallery.gallery-reveal-pending .gallery-thumb-reveal-item,
+  #gallery.gallery-revealed .gallery-thumb-reveal-item,
+  .gallery-lightbox-img,
+  .gallery-lightbox-close,
+  .gallery-lightbox-nav,
+  .gallery-lightbox-counter,
+  .gift-qr-lightbox-img,
+  .gift-qr-lightbox-close,
+  .gift-popup-qr-img,
+  .gift-popup-copy-btn,
+  .gift-popup-download-btn {
+    transform: none;
+    opacity: 1;
+  }
+  .gallery-lightbox-stage::after {
+    transition: none !important;
+    opacity: 0 !important;
+  }
+}
+
+/* ===========================
+   RESPONSIVE ADJUSTMENTS
+   =========================== */
+@media (max-width: 4rem) {
+  .hero-couple-name {
+    font-size: 0.352rem;
+  }
+
+  .hero-ampersand {
+    font-size: 0.448rem;
+  }
+
+  .countdown-num {
+    font-size: 0.256rem;
+  }
+
+  .gallery-main-img {
+    height: 0.608rem;
+  }
+}
+
+@media (min-width: 0.8rem) {
+  #app {
+    border-left: 1px solid rgba(0, 0, 0, 0.1);
+    border-right: 1px solid rgba(0, 0, 0, 0.1);
+  }
+
+  #toolbar,
+  #blessing-messages {
+    max-width: 5rem;
+  }
+}
+
+/* prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  #toolbar-toggle-btn,
+  #toolbar,
+  #blessing-messages,
+  .toolbar-toggle-icon .line {
+    transition-duration: 0.01ms !important;
+  }
+
+  .blessing-msg {
+    animation: blessingBubbleReduced 900ms linear forwards !important;
+    animation-delay: 0ms !important;
+    transform: translate3d(0, 0, 0) !important;
+    opacity: 1;
+  }
+
+  .blessing-msg::after {
+    animation: none !important;
+    opacity: 0 !important;
+  }
+
+  .story-block,
+  .story-block.slide-up,
+  .story-block.slide-down,
+  .story-block.slide-left,
+  .story-block.slide-right,
+  .story-block.is-visible,
+  .story-block.is-visible.slide-up,
+  .story-block.is-visible.slide-down,
+  .story-block.is-visible.slide-left,
+  .story-block.is-visible.slide-right {
+    transform: translate3d(0, 0, 0) !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+  }

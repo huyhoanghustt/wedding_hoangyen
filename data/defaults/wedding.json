@@ -1,0 +1,200 @@
+{
+  "_comment": "=== FILE CẤU HÌNH THIỆP CƯỚI === Chỉnh sửa file này để thay đổi nội dung website.",
+  "couple": {
+    "groom": "Tiến",
+    "bride": "Quyên"
+  },
+  "wedding": {
+    "date_display": "08 · 03 · 2026",
+    "date_iso": "2026-03-08T09:00:00+11:00",
+    "day_of_week": "Chủ Nhật",
+    "day": "08",
+    "month": "03",
+    "year": "2026",
+    "lunar_date": "Tức ngày 20 tháng Giêng năm Bính Ngọ",
+    "calendar_marks": {
+      "primary_days": [
+        8
+      ],
+      "secondary_days": [
+        7
+      ]
+    }
+  },
+  "blessings": {
+    "recent_fetch_limit": 50,
+    "decay_rate": 0.05,
+    "max_total": 500,
+    "name_dialog": {
+      "title": "Hãy cho vợ chồng mình biết tên của bạn",
+      "anonymous_label": "Điều đó không cần thiết, mình chỉ muốn chúc mừng hạnh phúc hai vợ chồng một cách tự nhiên nhất",
+      "name_placeholder": "Nhập tên của bạn...",
+      "submit_label": "Gửi lời chúc",
+      "default_anonymous_name": "Khách mời"
+    }
+  },
+  "media": {
+    "max_photo_size_bytes": 1048576,
+    "_comment": "Photos larger than this (in bytes) will be auto-resized. Default: 1MB = 1048576"
+  },
+  "hosts": {
+    "bride_side": {
+      "label": "Nhà Gái",
+      "parent1": "Ông Phạm Ngọc Hải",
+      "parent2": "Bà Đào Thị Hằng"
+    },
+    "groom_side": {
+      "label": "Nhà Trai",
+      "parent1": "Ông Phạm Tiến Quyết",
+      "parent2": "Bà Nguyễn Thị Thúy Liễu"
+    }
+  },
+  "invitation": {
+    "title": "Kính mời",
+    "default_pronouns": [
+      "bạn",
+      "Bạn",
+      "bạn",
+      "bọn mình",
+      "bạn",
+      "gia đình",
+      "hai đứa",
+      "bạn",
+      "chúng mình"
+    ],
+    "body": "Gửi đến {d0} tấm thiệp cưới đầy yêu thương.\n{d1} nhận được lời mời này vì {d2} là người đặc biệt với {d3}.\nMong {d4}{d5} sẽ đến chung vui.\nCùng chứng kiến khoảnh khắc hạnh phúc nhất của {d6}.\nCảm ơn vì luôn bên cạnh và yêu thương.\nHy vọng {d7} sẽ là người chứng kiến khoảnh khắc quan trọng nhất trong cuộc đời {d8}!",
+    "closing": "· · · ♥ · · ·"
+  },
+  "reception": {
+    "section_title": "Tiệc Cưới",
+    "section_subtitle": "Trân trọng kính mời",
+    "bride_side": {
+      "title": "Tiệc Cưới Nhà Gái",
+      "host": "Gia đình nhà gái",
+      "date": "Thứ bảy, ngày 07 tháng 03 năm 2026",
+      "time": "16:00",
+      "location": "Tư Gia Nhà Gái",
+      "address": "Đông Sơn · Đông Hưng · Thái Bình",
+      "map_url": "https://maps.app.goo.gl/E5fEA6H4ZDFPd1Pe9"
+    },
+    "groom_side": {
+      "title": "Tiệc Cưới Nhà Trai",
+      "host": "Gia đình nhà trai",
+      "date": "Chủ Nhật, ngày 08 tháng 03 năm 2026",
+      "time": "11:30",
+      "location": "Tư Gia Nhà Trai",
+      "address": "Hướng Dương · Chương Dương · Hà Nội",
+      "map_url": "https://maps.app.goo.gl/8zzMfHSgQG5HVmZ88"
+    },
+    "fontsize": {
+      "card_title": "0.3rem",
+      "card_host": "0.11rem",
+      "card_date": "0.12rem",
+      "card_time": "0.22rem",
+      "card_location": "0.13rem",
+      "card_address": "0.11rem"
+    }
+  },
+  "ceremony": {
+    "vu_quy": {
+      "title": "Lễ Vu Quy",
+      "time": "Vào Chủ Nhật · 08H00",
+      "location": "Tại Tư Gia Nhà Gái",
+      "address": "Đông Sơn · Đông Hưng · Thái Bình",
+      "map_url": "https://maps.app.goo.gl/8zzMfHSgQG5HVmZ88",
+      "map_label": "Chỉ đường"
+    },
+    "thanh_hon": {
+      "title": "Lễ Thành Hôn",
+      "time": "Vào Chủ Nhật · 11H00",
+      "location": "Tại Tư Gia Nhà Trai",
+      "address": "Hướng Dương · Chương Dương · Hà Nội",
+      "map_url": "https://maps.app.goo.gl/E5fEA6H4ZDFPd1Pe9",
+      "map_label": "Chỉ đường"
+    }
+  },
+  "music": {
+    "src": "/media/music/de96acfbb40bc8e79f91062dbed7050c.mp3",
+    "title": "Nhạc nền đám cưới",
+    "autoplay": true
+  },
+  "ceremony_map": {
+    "_note": "Đơn vị rem. 1rem = 100px ở màn 500px",
+    "height": "3.2rem",
+    "width": "90%",
+    "top_padding": "0.24rem",
+    "bot_padding": "0.28rem",
+    "house_icon_size": "0.44rem",
+    "vu_quy_btn_pos": {
+      "top": "1.0rem",
+      "right": "0.44rem"
+    },
+    "thanh_hon_btn_pos": {
+      "bottom": "0.1rem",
+      "left": "0.44rem"
+    }
+  },
+  "rsvp": {
+    "title": "Xác nhận tham dự",
+    "subtitle": "Sự có mặt của quý khách là niềm vinh dự cho gia đình!",
+    "success_message": "Chúng tôi rất vui khi nhận được xác nhận của bạn.\nHẹn gặp lại ngày 08/03/2026! 🎉"
+  },
+  "gifts": {
+    "title": "Quà mừng cưới",
+    "subtitle": "Tình cảm hơn vật chất",
+    "groom": {
+      "name": "Tiến",
+      "bank": "MB Bank",
+      "account": "9704 2292 5702 6539",
+      "account_name": "PHAM VAN TIEN"
+    },
+    "bride": {
+      "name": "Quyên",
+      "bank": "MB Bank",
+      "account": "9704 2292 0907 3301 723",
+      "account_name": "PHAM THI QUYEN"
+    }
+  },
+  "toolbar_toggle": {
+    "size": {
+      "button": "0.44rem",
+      "icon": "0.18rem",
+      "line_width": "0.15rem",
+      "line_height": "2px"
+    },
+    "position": {
+      "left": "clamp(0.38rem, calc(50% + 2.2rem), calc(100% - 0.23rem))",
+      "bottom_expanded": "calc(var(--toolbar-height) + 0.32rem)",
+      "bottom_collapsed": "0.12rem"
+    }
+  },
+  "footer": {
+    "tagline": "Trân trọng & Yêu thương",
+    "credit": "❤ · Made with love · ❤"
+  },
+  "_typography_note": "Đơn vị rem. Màn 500px: 1rem=100px. Màn 375px: 1rem=75px",
+  "typography": {
+    "hero_name": "0.42rem",
+    "hero_overlay_label": "0.13rem",
+    "hero_overlay_event": "0.18rem",
+    "hero_overlay_date": "0.14rem",
+    "section_title": "0.32rem",
+    "section_subtitle": "0.11rem",
+    "invitation_title": "0.36rem",
+    "invitation_body": "0.13rem",
+    "invitation_closing": "0.36rem",
+    "host_role": "0.12rem",
+    "host_name": "0.14rem",
+    "ceremony_title": "0.22rem",
+    "ceremony_time": "0.12rem",
+    "ceremony_date_num": "0.48rem",
+    "ceremony_date_label": "0.11rem",
+    "lunar_date": "0.11rem",
+    "countdown_num": "0.42rem",
+    "countdown_label": "0.10rem",
+    "gift_name": "0.16rem",
+    "gift_bank_info": "0.12rem",
+    "footer_script": "0.30rem",
+    "footer_tagline": "0.12rem"
+  }
+}
